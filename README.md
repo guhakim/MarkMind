@@ -12,13 +12,15 @@
 2. [주요 기능](#주요-기능)
 3. [기술 스택](#기술-스택)
 4. [아키텍처](#아키텍처)
-5. [제작 과정](#제작-과정)
-6. [화면 구성](#화면-구성)
-7. [시작하기](#시작하기)
-8. [폴더 구조](#폴더-구조)
-9. [환경 변수](#환경-변수)
-10. [배포](#배포)
-11. [라이선스](#라이선스)
+5. [Google 로그인 인증 방식](#google-로그인-인증-방식)
+6. [즐겨찾기 데이터 저장 구조](#즐겨찾기-데이터-저장-구조)
+7. [제작 과정](#제작-과정)
+8. [화면 구성](#화면-구성)
+9. [시작하기](#시작하기)
+10. [폴더 구조](#폴더-구조)
+11. [환경 변수](#환경-변수)
+12. [배포](#배포)
+13. [라이선스](#라이선스)
 
 ---
 
@@ -108,6 +110,129 @@ Next.js (Vercel Edge)
 2. 서버에서 Open Graph 메타데이터(제목, 설명, 썸네일) 크롤링
 3. OpenAI API를 통해 카테고리·태그 자동 생성
 4. Supabase에 저장 후 대시보드에 즉시 반영
+
+---
+
+## Google 로그인 인증 방식
+
+MarkMind는 별도의 회원가입 폼 없이 **Google OAuth 2.0** 만으로 인증을 처리합니다.
+
+### 사용 도구
+
+| 도구 | 역할 |
+|------|------|
+| [NextAuth.js](https://next-auth.js.org/) | Next.js 전용 인증 라이브러리. Google Provider를 내장 지원 |
+| Google Cloud Console | OAuth 2.0 클라이언트 ID·시크릿 발급 |
+| Supabase (users 테이블) | 최초 로그인 시 사용자 정보 자동 저장 |
+
+### 인증 흐름
+
+```
+① 사용자가 "Google로 무료 시작하기" 클릭
+        │
+② NextAuth → Google OAuth 2.0 Authorization 요청
+        │
+③ Google 로그인 동의 화면 (이름·이메일·프로필 사진 권한)
+        │
+④ Google → Authorization Code 반환
+        │
+⑤ NextAuth → Access Token + ID Token 교환 (서버 사이드)
+        │
+⑥ NextAuth Session 생성 (JWT 또는 DB 세션)
+        │
+⑦ Supabase users 테이블에 사용자 upsert
+   (google_id, email, name, avatar_url)
+        │
+⑧ 대시보드(/dashboard) 리다이렉트
+```
+
+### NextAuth 설정 핵심 포인트
+
+- **Provider**: `GoogleProvider` — `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` 환경 변수 사용
+- **Callbacks**:
+  - `signIn` — 최초 로그인 시 Supabase에 사용자 정보 upsert
+  - `session` — 세션 객체에 `user.id`(Supabase UUID) 주입
+  - `jwt` — 토큰에 사용자 DB ID 포함시켜 API 인증에 활용
+- **보안**: `NEXTAUTH_SECRET`으로 JWT 서명, HTTPS 환경에서만 쿠키 전송
+
+---
+
+## 즐겨찾기 데이터 저장 구조
+
+### 사용 도구
+
+| 도구 | 역할 |
+|------|------|
+| [Supabase](https://supabase.com/) | PostgreSQL 호스팅 + RESTful API 자동 생성 + Row Level Security |
+| Supabase Client (JS SDK) | 서버 사이드에서 DB 읽기·쓰기 |
+| PostgreSQL | 실제 데이터 저장 엔진 |
+
+### 데이터베이스 스키마
+
+**`users` 테이블** — 로그인한 사용자 정보
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | uuid (PK) | Supabase 자동 생성 고유 ID |
+| `google_id` | text | Google 계정 고유 식별자 |
+| `email` | text | 사용자 이메일 |
+| `name` | text | 사용자 이름 |
+| `avatar_url` | text | 프로필 이미지 URL |
+| `created_at` | timestamptz | 최초 가입 시각 |
+
+**`bookmarks` 테이블** — 저장된 북마크 데이터
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `id` | uuid (PK) | 북마크 고유 ID |
+| `user_id` | uuid (FK → users.id) | 소유 사용자 |
+| `url` | text | 저장한 URL |
+| `title` | text | OG 파싱으로 추출한 제목 |
+| `description` | text | OG 파싱으로 추출한 설명 |
+| `thumbnail` | text | OG 이미지 URL |
+| `category` | text | AI가 분류한 카테고리 (AI, Design 등) |
+| `tags` | text[] | AI가 생성한 태그 배열 |
+| `created_at` | timestamptz | 저장 시각 |
+
+### 저장 흐름
+
+```
+사용자 URL 입력
+    │
+    ▼
+① Open Graph 파싱 (서버 사이드)
+   fetch(url) → cheerio 또는 html-metadata-parser
+   → title / description / thumbnail 추출
+    │
+    ▼
+② OpenAI API 호출
+   프롬프트: "다음 URL 정보를 보고 category와 tags를 JSON으로 반환해줘"
+   → { category: "AI", tags: ["ChatGPT", "LLM", "생산성"] }
+    │
+    ▼
+③ Supabase INSERT
+   bookmarks 테이블에 ①+② 결과 통합 저장
+    │
+    ▼
+④ 클라이언트 상태 갱신
+   대시보드 북마크 목록 실시간 업데이트
+```
+
+### 보안 — Row Level Security (RLS)
+
+Supabase의 RLS 정책으로 **자신의 북마크만** 조회·수정·삭제 가능하도록 제한합니다.
+
+```sql
+-- 조회: 본인 소유 데이터만 허용
+CREATE POLICY "users can read own bookmarks"
+  ON bookmarks FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 삽입: 인증된 사용자만 허용
+CREATE POLICY "users can insert own bookmarks"
+  ON bookmarks FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+```
 
 ---
 
