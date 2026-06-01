@@ -5,6 +5,7 @@
 🔗 **배포 주소**: [https://markmind-nu.vercel.app](https://markmind-nu.vercel.app)
 
 <img width="1276" height="537" alt="CleanShot 2026-06-01 at 11 57 30" src="https://github.com/user-attachments/assets/13c40942-a5dd-45c5-bafa-cd928c67b179" />
+<img width="1268" height="531" alt="CleanShot 2026-06-01 at 11 58 23" src="https://github.com/user-attachments/assets/0a284da5-d4e9-4784-a712-3243084b86e0" />
 
 
 ---
