@@ -4,6 +4,11 @@
 
 🔗 **배포 주소**: [https://markmind-nu.vercel.app](https://markmind-nu.vercel.app)
 
+**AI가 북마크를 자동으로 분석·분류해 주는 스마트 북마크 관리 서비스**
+> 문제발견 : 윈도우 / mac 노트북 / 각자 다른 운영 체제를 사용을 통해 즐기 찾기를 해 놓으면 즐거찾기가 왜? 되어 있는지 그리고 무엇을 하는 사이트인지
+> 를 잘모르때가 많았습니다. 그 문제를 해걀하기 위해 웹사이트를 통해 즐거찾기를 쉽게 파악하고 "AI" 가 어떤 사이트인지 파악을 해주면서 자동 분류 과정을
+> 해줍니다. 즐거찾기 사이트에서 새로운 기능과 신제품이 나오면 연동이 되어서 알람 기능으로 사이트에 대한 인사이트를 얻게 됩니다.
+> 
 <img width="1276" height="537" alt="CleanShot 2026-06-01 at 11 57 30" src="https://github.com/user-attachments/assets/13c40942-a5dd-45c5-bafa-cd928c67b179" />
 <img width="1268" height="531" alt="CleanShot 2026-06-01 at 11 58 23" src="https://github.com/user-attachments/assets/0a284da5-d4e9-4784-a712-3243084b86e0" />
 
