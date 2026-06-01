@@ -4,8 +4,7 @@
 
 🔗 **배포 주소**: [https://markmind-nu.vercel.app](https://markmind-nu.vercel.app)
 
-![MarkMind - AI 북마크 정리](https://github.com/user-attachments/assets/e0b3d788-9870-4de3-8cdd-10bab23cc68c)
-
+<img width="1276" height="537" alt="CleanShot 2026-06-01 at 11 57 30" src="https://github.com/user-attachments/assets/13c40942-a5dd-45c5-bafa-cd928c67b179" />
 
 
 ---
