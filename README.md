@@ -4,7 +4,8 @@
 
 🔗 **배포 주소**: [https://markmind-nu.vercel.app](https://markmind-nu.vercel.app)
 
-[MarkMind - AI 북마크 정리.pdf](https://github.com/user-attachments/files/28449631/MarkMind.-.AI.pdf)
+![MarkMind - AI 북마크 정리](https://github.com/user-attachments/assets/e0b3d788-9870-4de3-8cdd-10bab23cc68c)
+
 
 
 ---
