@@ -1,0 +1,293 @@
+export type Lang = "ko" | "en"
+
+export const dictionaries = {
+  ko: {
+    // 공통
+    "common.login": "로그인",
+    "common.loginLoading": "로그인 중...",
+    "common.cancel": "취소",
+    "common.save": "저장하기",
+    "common.delete": "삭제",
+    "common.edit": "수정",
+    "common.close": "닫기",
+    "common.logout": "로그아웃",
+    "common.inquiry": "문의하기",
+
+    // 히어로 (랜딩/로그인 공통)
+    "hero.badge": "AI 기반 북마크 관리",
+    "hero.headingPre": "북마크를 ",
+    "hero.headingPost": "가 알아서 정리해드립니다",
+    "hero.subtitle": "URL 하나만 저장하세요. AI가 자동으로 분석하고, 카테고리를 분류하고, 나중에 쉽게 찾을 수 있도록 정리해드립니다.",
+    "hero.googleCta": "Google로 무료 시작하기",
+    "hero.freeNote": "신용카드 불필요 · 무료로 시작",
+
+    // 에러 메시지
+    "error.popupBlocked": "팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해주세요.",
+    "error.unauthorizedDomainDev": "이 도메인에서는 로그인이 허용되지 않습니다. Firebase 콘솔에서 도메인을 추가해주세요.",
+    "error.unauthorizedDomainUser": "이 도메인에서는 로그인이 허용되지 않습니다. 관리자에게 문의해주세요.",
+    "error.networkFailed": "네트워크 연결을 확인한 후 다시 시도해주세요.",
+    "error.generic": "로그인 중 오류가 발생했습니다. 다시 시도해주세요.",
+    "error.genericRetryLater": "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+
+    // 기능 소개
+    "features.ai.title": "AI 자동 분석",
+    "features.ai.desc": "북마크를 저장하면 AI가 내용을 분석하고 카테고리를 자동으로 분류해드립니다",
+    "features.smart.title": "스마트 정리",
+    "features.smart.desc": "태그, 카테고리, 검색으로 수백 개의 북마크도 빠르게 찾을 수 있습니다",
+    "features.fast.title": "빠른 저장",
+    "features.fast.desc": "URL만 입력하면 제목, 설명, 썸네일을 자동으로 불러와 즉시 저장됩니다",
+    "features.safe.title": "안전한 보관",
+    "features.safe.desc": "Google 계정으로 로그인하여 내 북마크를 안전하게 보관하고 어디서든 접근하세요",
+
+    "why.title": "왜 MarkMind인가요?",
+    "why.subtitle": "단순한 북마크를 넘어, 지식을 체계적으로 관리하세요",
+
+    "cta.title": "지금 바로 시작하세요",
+    "cta.desc": "Google 계정 하나로 모든 기능을 무료로 이용할 수 있습니다",
+    "cta.terms": "로그인하면 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다",
+
+    "footer.copyright": "© 2025 MarkMind · AI 북마크 정리 서비스",
+
+    // 문의하기
+    "contact.title": "문의하기",
+    "contact.subtitle": "궁금한 점이 있으시면 언제든지 문의해주세요",
+    "contact.name": "이름",
+    "contact.namePlaceholder": "홍길동",
+    "contact.email": "이메일",
+    "contact.message": "문의 내용",
+    "contact.messagePlaceholder": "문의하실 내용을 작성해주세요",
+    "contact.send": "문의 보내기",
+    "contact.sending": "전송 중...",
+    "contact.sentTitle": "문의가 접수되었습니다!",
+    "contact.sentDesc": "빠른 시일 내에 답변드리겠습니다.",
+
+    // 미리보기 샘플 북마크
+    "preview.chatgpt.desc": "OpenAI가 개발한 대화형 AI 서비스입니다.",
+    "preview.chatgpt.tag": "AI",
+    "preview.figma.desc": "웹 기반 UI/UX 디자인 협업 툴입니다.",
+    "preview.figma.tag": "디자인",
+    "preview.github.desc": "전 세계 개발자들이 사용하는 코드 호스팅 플랫폼입니다.",
+    "preview.github.tag": "기술",
+    "preview.midjourney.desc": "텍스트로 고품질 이미지를 생성하는 AI 서비스입니다.",
+    "preview.midjourney.tag": "AI",
+    "preview.notion.desc": "노트, 문서, 프로젝트 관리를 하나로 통합한 워크스페이스입니다.",
+    "preview.notion.tag": "비즈니스",
+    "preview.dribbble.desc": "전 세계 디자이너들이 작품을 공유하는 커뮤니티입니다.",
+    "preview.dribbble.tag": "디자인",
+
+    // 헤더
+    "header.searchPlaceholder": "북마크 검색...",
+
+    // 사이드바
+    "sidebar.categoriesLabel": "카테고리",
+    "sidebar.aiActive": "AI 분석 활성",
+    "sidebar.aiActiveDesc": "새로운 북마크가 추가되면 자동으로 분석됩니다",
+
+    // 카테고리 이름
+    "category.all": "전체",
+    "category.AI": "AI",
+    "category.디자인": "디자인",
+    "category.쇼핑": "쇼핑",
+    "category.기술": "기술",
+    "category.뉴스": "뉴스",
+    "category.엔터테인먼트": "엔터테인먼트",
+    "category.교육": "교육",
+    "category.비즈니스": "비즈니스",
+    "category.소셜": "소셜",
+    "category.금융": "금융",
+    "category.기타": "기타",
+
+    // 대시보드
+    "dashboard.allBookmarks": "모든 북마크",
+    "dashboard.reanalyzeAll": "전체 재분석",
+    "dashboard.noBookmarksTitle": "북마크가 없습니다",
+    "dashboard.noBookmarksDesc": "새로운 북마크를 추가하면 AI가 자동으로 분석하여 정리해 드립니다",
+    "dashboard.dropHereTitle": "여기에 링크를 놓으세요",
+    "dashboard.dropHereDesc": "자동으로 AI가 분석해서 북마크에 추가합니다",
+    "dashboard.analyzing": "AI 분석 중...",
+
+    // 토스트
+    "toast.alreadyExists": "이미 저장된 북마크입니다.",
+    "toast.addedSuccess": "북마크가 추가됐습니다!",
+    "toast.addFailed": "북마크 추가에 실패했습니다.",
+    "toast.loadFailed": "북마크를 불러오지 못했습니다. 네트워크를 확인해주세요.",
+    "toast.reanalyzeComplete": "전체 북마크 재분석이 완료됐습니다.",
+    "toast.saveFailed": "북마크 저장에 실패했습니다. 다시 시도해주세요.",
+    "toast.deleteFailed": "북마크 삭제에 실패했습니다.",
+    "toast.editFailed": "북마크 수정에 실패했습니다.",
+    "toast.invalidUrl": "유효한 URL이 아닙니다.",
+
+    // 공통 필드 라벨
+    "field.title": "제목",
+    "field.description": "설명",
+    "field.category": "카테고리",
+    "field.tags": "태그",
+
+    // 북마크 추가
+    "add.trigger": "북마크 추가",
+    "add.dialogTitle": "AI 북마크 추가",
+    "add.dialogDesc": "URL을 입력하면 AI가 자동으로 사이트를 분석하여 정리합니다",
+    "add.urlLabel": "사이트 URL",
+    "add.analyzeBtn": "분석",
+    "add.analyzingTitle": "사이트를 분석하고 있습니다...",
+    "add.analyzingDesc": "카테고리, 설명, 태그를 자동으로 생성합니다",
+    "add.analysisComplete": "분석 완료",
+    "add.siteName": "사이트명",
+    "add.errorAnalyzeFailed": "분석에 실패했습니다. 다시 시도해주세요.",
+    "add.errorNetwork": "네트워크 오류가 발생했습니다. 다시 시도해주세요.",
+    "add.errorDuplicate": "이미 저장된 북마크입니다. 동일한 URL이 존재합니다.",
+
+    // 북마크 편집
+    "edit.dialogTitle": "북마크 편집",
+    "edit.categoryPlaceholder": "카테고리 선택",
+    "edit.customCategory": "✏️ 직접 입력...",
+    "edit.customCategoryPlaceholder": "카테고리 이름을 직접 입력하세요",
+    "edit.tagsHint": "(쉼표로 구분)",
+    "edit.tagsPlaceholder": "AI, 개발, 유용한사이트",
+
+    // 북마크 카드
+    "card.notifRead": "알림 읽음",
+    "card.notifOff": "알림 끄기",
+    "card.notifOn": "알림 켜기",
+    "card.moveTooltip": "이동",
+    "card.deleteConfirmTitle": "북마크를 삭제할까요?",
+  },
+  en: {
+    "common.login": "Log in",
+    "common.loginLoading": "Signing in...",
+    "common.cancel": "Cancel",
+    "common.save": "Save",
+    "common.delete": "Delete",
+    "common.edit": "Edit",
+    "common.close": "Close",
+    "common.logout": "Log out",
+    "common.inquiry": "Contact us",
+
+    "hero.badge": "AI-Powered Bookmark Management",
+    "hero.headingPre": "",
+    "hero.headingPost": " organizes your bookmarks for you",
+    "hero.subtitle": "Just save a URL. AI automatically analyzes it, sorts it into a category, and organizes it so you can easily find it later.",
+    "hero.googleCta": "Get started free with Google",
+    "hero.freeNote": "No credit card required · Free to start",
+
+    "error.popupBlocked": "The popup was blocked. Please allow popups in your browser and try again.",
+    "error.unauthorizedDomainDev": "Sign-in isn't allowed from this domain. Please add it in the Firebase console.",
+    "error.unauthorizedDomainUser": "Sign-in isn't allowed from this domain. Please contact the administrator.",
+    "error.networkFailed": "Please check your network connection and try again.",
+    "error.generic": "An error occurred while signing in. Please try again.",
+    "error.genericRetryLater": "An error occurred while signing in. Please try again shortly.",
+
+    "features.ai.title": "AI Auto-Analysis",
+    "features.ai.desc": "When you save a bookmark, AI analyzes the content and automatically assigns a category",
+    "features.smart.title": "Smart Organization",
+    "features.smart.desc": "Find hundreds of bookmarks quickly with tags, categories, and search",
+    "features.fast.title": "Quick Save",
+    "features.fast.desc": "Just enter a URL — the title, description, and thumbnail are fetched and saved instantly",
+    "features.safe.title": "Secure Storage",
+    "features.safe.desc": "Sign in with your Google account to keep your bookmarks safe and access them anywhere",
+
+    "why.title": "Why MarkMind?",
+    "why.subtitle": "Go beyond simple bookmarking — manage your knowledge systematically",
+
+    "cta.title": "Get started right now",
+    "cta.desc": "Use every feature for free with just one Google account",
+    "cta.terms": "By signing in, you agree to our Terms of Service and Privacy Policy",
+
+    "footer.copyright": "© 2025 MarkMind · AI Bookmark Organizer",
+
+    "contact.title": "Contact Us",
+    "contact.subtitle": "If you have any questions, feel free to reach out anytime",
+    "contact.name": "Name",
+    "contact.namePlaceholder": "John Doe",
+    "contact.email": "Email",
+    "contact.message": "Message",
+    "contact.messagePlaceholder": "Please write your inquiry",
+    "contact.send": "Send message",
+    "contact.sending": "Sending...",
+    "contact.sentTitle": "Your inquiry has been received!",
+    "contact.sentDesc": "We'll get back to you as soon as possible.",
+
+    "preview.chatgpt.desc": "A conversational AI service developed by OpenAI.",
+    "preview.chatgpt.tag": "AI",
+    "preview.figma.desc": "A web-based UI/UX design collaboration tool.",
+    "preview.figma.tag": "Design",
+    "preview.github.desc": "A code hosting platform used by developers worldwide.",
+    "preview.github.tag": "Technology",
+    "preview.midjourney.desc": "An AI service that generates high-quality images from text.",
+    "preview.midjourney.tag": "AI",
+    "preview.notion.desc": "An all-in-one workspace combining notes, docs, and project management.",
+    "preview.notion.tag": "Business",
+    "preview.dribbble.desc": "A community where designers worldwide share their work.",
+    "preview.dribbble.tag": "Design",
+
+    "header.searchPlaceholder": "Search bookmarks...",
+
+    "sidebar.categoriesLabel": "Categories",
+    "sidebar.aiActive": "AI Analysis Active",
+    "sidebar.aiActiveDesc": "New bookmarks are automatically analyzed when added",
+
+    "category.all": "All",
+    "category.AI": "AI",
+    "category.디자인": "Design",
+    "category.쇼핑": "Shopping",
+    "category.기술": "Technology",
+    "category.뉴스": "News",
+    "category.엔터테인먼트": "Entertainment",
+    "category.교육": "Education",
+    "category.비즈니스": "Business",
+    "category.소셜": "Social",
+    "category.금융": "Finance",
+    "category.기타": "Other",
+
+    "dashboard.allBookmarks": "All Bookmarks",
+    "dashboard.reanalyzeAll": "Reanalyze All",
+    "dashboard.noBookmarksTitle": "No bookmarks yet",
+    "dashboard.noBookmarksDesc": "Add a new bookmark and AI will automatically analyze and organize it for you",
+    "dashboard.dropHereTitle": "Drop your link here",
+    "dashboard.dropHereDesc": "AI will automatically analyze it and add it to your bookmarks",
+    "dashboard.analyzing": "AI is analyzing...",
+
+    "toast.alreadyExists": "This bookmark is already saved.",
+    "toast.addedSuccess": "Bookmark added!",
+    "toast.addFailed": "Failed to add bookmark.",
+    "toast.loadFailed": "Failed to load bookmarks. Please check your network.",
+    "toast.reanalyzeComplete": "Reanalysis of all bookmarks is complete.",
+    "toast.saveFailed": "Failed to save bookmark. Please try again.",
+    "toast.deleteFailed": "Failed to delete bookmark.",
+    "toast.editFailed": "Failed to update bookmark.",
+    "toast.invalidUrl": "This is not a valid URL.",
+
+    "field.title": "Title",
+    "field.description": "Description",
+    "field.category": "Category",
+    "field.tags": "Tags",
+
+    "add.trigger": "Add Bookmark",
+    "add.dialogTitle": "Add Bookmark with AI",
+    "add.dialogDesc": "Enter a URL and AI will automatically analyze and organize the site",
+    "add.urlLabel": "Site URL",
+    "add.analyzeBtn": "Analyze",
+    "add.analyzingTitle": "Analyzing the site...",
+    "add.analyzingDesc": "Automatically generating category, description, and tags",
+    "add.analysisComplete": "Analysis complete",
+    "add.siteName": "Site name",
+    "add.errorAnalyzeFailed": "Analysis failed. Please try again.",
+    "add.errorNetwork": "A network error occurred. Please try again.",
+    "add.errorDuplicate": "This bookmark already exists. The same URL is already saved.",
+
+    "edit.dialogTitle": "Edit Bookmark",
+    "edit.categoryPlaceholder": "Select category",
+    "edit.customCategory": "✏️ Custom...",
+    "edit.customCategoryPlaceholder": "Enter a custom category name",
+    "edit.tagsHint": "(comma separated)",
+    "edit.tagsPlaceholder": "AI, dev, useful site",
+
+    "card.notifRead": "Mark as read",
+    "card.notifOff": "Turn off notifications",
+    "card.notifOn": "Turn on notifications",
+    "card.moveTooltip": "Open",
+    "card.deleteConfirmTitle": "Delete this bookmark?",
+  },
+} as const
+
+export type TranslationKey = keyof (typeof dictionaries)["ko"]

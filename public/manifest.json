@@ -1,0 +1,24 @@
+{
+  "name": "MarkMind",
+  "short_name": "MarkMind",
+  "description": "AI가 자동으로 북마크를 분석하고 정리해주는 스마트 북마크 관리 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#22c55e",
+  "background_color": "#0e0f13",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
