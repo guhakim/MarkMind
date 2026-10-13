@@ -5,11 +5,23 @@ import { dictionaries, type Lang } from "@/lib/translations"
 
 const STORAGE_KEY = "markmind-lang"
 
+// 토글 버튼이 순환하는 고정 순서 — en → ko → ja → en
+const LANG_CYCLE = ["en", "ko", "ja"] as const satisfies readonly Lang[]
+
 interface LanguageContextValue {
   lang: Lang
   setLang: (lang: Lang) => void
   toggleLang: () => void
-  t: (key: string) => string
+  t: (key: string, vars?: Record<string, string | number>) => string
+}
+
+// "{count}" 형태의 플레이스홀더를 전달된 값으로 치환한다.
+// 전달되지 않은 이름은 원문을 그대로 남겨 누락을 눈에 띄게 한다.
+function interpolate(template: string, vars?: Record<string, string | number>): string {
+  if (!vars) return template
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    name in vars ? String(vars[name]) : match
+  )
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
@@ -19,7 +31,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === "ko" || stored === "en") setLangState(stored)
+    if (stored === "ko" || stored === "en" || stored === "ja") setLangState(stored)
   }, [])
 
   useEffect(() => {
@@ -30,13 +42,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLang = useCallback((next: Lang) => setLangState(next), [])
 
   const toggleLang = useCallback(() => {
-    setLangState((prev) => (prev === "ko" ? "en" : "ko"))
+    setLangState((prev) => LANG_CYCLE[(LANG_CYCLE.indexOf(prev) + 1) % LANG_CYCLE.length])
   }, [])
 
   const t = useCallback(
-    (key: string) => {
+    (key: string, vars?: Record<string, string | number>) => {
       const dict = dictionaries[lang] as Record<string, string>
-      return dict[key] ?? dictionaries.ko[key as keyof typeof dictionaries.ko] ?? key
+      const template = dict[key] ?? dictionaries.ko[key as keyof typeof dictionaries.ko] ?? key
+      return interpolate(template, vars)
     },
     [lang]
   )

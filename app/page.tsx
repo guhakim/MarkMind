@@ -36,7 +36,7 @@ export default function Home() {
 
 // 푸시 구독은 서버가 Firestore(users/{uid})에서 직접 읽으므로 더 이상 클라이언트에서 넘기지 않는다
 function BookmarkApp({ uid }: { uid: string }) {
-  const { t, lang } = useLanguage()
+  const { t } = useLanguage()
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [activeCategory, setActiveCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -328,10 +328,11 @@ function BookmarkApp({ uid }: { uid: string }) {
                 {activeCategory === "all" ? t("dashboard.allBookmarks") : translateCategory(t, activeCategory)}
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                {lang === "ko"
-                  ? `${filteredBookmarks.length}개의 북마크`
-                  : `${filteredBookmarks.length} bookmark${filteredBookmarks.length === 1 ? "" : "s"}`}
-                {searchQuery && (lang === "ko" ? ` • "${searchQuery}" 검색 결과` : ` • results for "${searchQuery}"`)}
+                {t(
+                  filteredBookmarks.length === 1 ? "dashboard.bookmarkCountOne" : "dashboard.bookmarkCount",
+                  { count: filteredBookmarks.length }
+                )}
+                {searchQuery && ` • ${t("dashboard.searchResults", { query: searchQuery })}`}
               </p>
             </div>
             {bookmarks.length > 0 && (
@@ -344,9 +345,7 @@ function BookmarkApp({ uid }: { uid: string }) {
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
                 {reanalyzing
-                  ? (lang === "ko"
-                      ? `재분석 중 ${reanalyzProgress.done}/${reanalyzProgress.total}`
-                      : `Reanalyzing ${reanalyzProgress.done}/${reanalyzProgress.total}`)
+                  ? t("dashboard.reanalyzing", { done: reanalyzProgress.done, total: reanalyzProgress.total })
                   : t("dashboard.reanalyzeAll")}
               </Button>
             )}
@@ -371,7 +370,7 @@ function BookmarkApp({ uid }: { uid: string }) {
               <h3 className="text-lg font-medium text-foreground mb-2">{t("dashboard.noBookmarksTitle")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-6">
                 {searchQuery
-                  ? (lang === "ko" ? `"${searchQuery}"에 대한 검색 결과가 없습니다` : `No results found for "${searchQuery}"`)
+                  ? t("dashboard.noSearchResults", { query: searchQuery })
                   : t("dashboard.noBookmarksDesc")
                 }
               </p>
