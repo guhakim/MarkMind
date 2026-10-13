@@ -6,9 +6,12 @@ import { auth, db } from "@/lib/firebase"
 import { subscribeToPush } from "@/lib/firebase-messaging"
 import { doc, setDoc } from "firebase/firestore"
 import { toast } from "sonner"
+import { useLanguage } from "@/lib/i18n"
 
 const INACTIVITY_MS = 3 * 60 * 1000
 const WARN_BEFORE_MS = 30 * 1000
+// mousemove처럼 초당 수십 번 발생하는 이벤트마다 타이머를 재생성하지 않도록 최소 간격을 둔다.
+const RESET_THROTTLE_MS = 1000
 
 interface AuthContextType {
   user: User | null
@@ -19,12 +22,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({ user: null, loading: true, pushSubscription: null })
 
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
+  // app/layout.tsx 기준 LanguageProvider > FirebaseAuthProvider 순서이므로 안전하게 사용 가능
+  const { t } = useLanguage()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [pushSubscription, setPushSubscription] = useState<PushSubscriptionJSON | null>(null)
   const logoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warnToastId = useRef<string | number | null>(null)
+  const resetTimersRef = useRef<(() => void) | null>(null)
+  const lastResetAt = useRef(0)
 
   const clearTimers = useCallback(() => {
     if (logoutTimer.current) clearTimeout(logoutTimer.current)
@@ -37,24 +44,36 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     clearTimers()
 
     warnTimer.current = setTimeout(() => {
-      warnToastId.current = toast.warning("30초 후 보안을 위해 자동 로그아웃됩니다.", {
+      warnToastId.current = toast.warning(t("auth.inactivityWarning"), {
         duration: 30000,
-        action: { label: "로그인 유지", onClick: resetTimers },
+        action: { label: t("auth.inactivityStay"), onClick: () => resetTimersRef.current?.() },
       })
     }, INACTIVITY_MS - WARN_BEFORE_MS)
 
     logoutTimer.current = setTimeout(async () => {
       await signOut(auth)
-      toast.info("3분간 활동이 없어 보안 로그아웃됐습니다.")
+      toast.info(t("auth.inactivityLoggedOut"))
     }, INACTIVITY_MS)
-  }, [clearTimers])
+  }, [clearTimers, t])
+
+  // 토스트의 "로그인 유지" 액션이 항상 최신 resetTimers를 호출하도록 ref로 연결
+  useEffect(() => {
+    resetTimersRef.current = resetTimers
+  }, [resetTimers])
 
   // 비활동 감지 (로그인 상태일 때만)
   useEffect(() => {
     if (!user) { clearTimers(); return }
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click", "pointerdown"]
-    const handler = () => resetTimers()
+    // 1초 안에 연달아 들어오는 리셋은 무시 — 3분 로그아웃 / 30초 경고 기준은 그대로다.
+    const handler = () => {
+      const now = Date.now()
+      if (now - lastResetAt.current < RESET_THROTTLE_MS) return
+      lastResetAt.current = now
+      resetTimers()
+    }
     events.forEach(e => window.addEventListener(e, handler, { passive: true }))
+    lastResetAt.current = Date.now()
     resetTimers()
     return () => { events.forEach(e => window.removeEventListener(e, handler)); clearTimers() }
   }, [user, resetTimers, clearTimers])

@@ -29,6 +29,11 @@ export const dictionaries = {
     "error.generic": "로그인 중 오류가 발생했습니다. 다시 시도해주세요.",
     "error.genericRetryLater": "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
 
+    // 보안 자동 로그아웃 (비활동 감지)
+    "auth.inactivityWarning": "30초 후 보안을 위해 자동 로그아웃됩니다.",
+    "auth.inactivityStay": "로그인 유지",
+    "auth.inactivityLoggedOut": "3분간 활동이 없어 보안 로그아웃됐습니다.",
+
     // 기능 소개
     "features.ai.title": "AI 자동 분석",
     "features.ai.desc": "북마크를 저장하면 AI가 내용을 분석하고 카테고리를 자동으로 분류해드립니다",
@@ -176,6 +181,10 @@ export const dictionaries = {
     "error.networkFailed": "Please check your network connection and try again.",
     "error.generic": "An error occurred while signing in. Please try again.",
     "error.genericRetryLater": "An error occurred while signing in. Please try again shortly.",
+
+    "auth.inactivityWarning": "You will be signed out automatically in 30 seconds for security.",
+    "auth.inactivityStay": "Stay signed in",
+    "auth.inactivityLoggedOut": "You were signed out for security after 3 minutes of inactivity.",
 
     "features.ai.title": "AI Auto-Analysis",
     "features.ai.desc": "When you save a bookmark, AI analyzes the content and automatically assigns a category",
