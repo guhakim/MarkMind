@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/helpers/alias-hook.ts --import ./tests/helpers/dns-stub.ts --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
