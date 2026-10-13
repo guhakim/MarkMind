@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useLanguage } from "@/lib/i18n"
+import { auth } from "@/lib/firebase"
 import type { Bookmark } from "@/lib/types"
 
 interface AddBookmarkDialogProps {
@@ -44,9 +45,18 @@ export function AddBookmarkDialog({ onAdd, trigger, existingUrls = [] }: AddBook
     setError("")
 
     try {
+      // 서버가 ID 토큰을 검증하므로 반드시 함께 보낸다
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) {
+        setError(t("add.errorAnalyzeFailed"))
+        return
+      }
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ url: url.trim() }),
       })
       const data = await res.json()

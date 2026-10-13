@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireUid } from "@/lib/auth-server"
+import { assertPublicHttpUrl, fetchPublicUrl, UnsafeUrlError } from "@/lib/url-guard"
+
+// dns/crypto 등 Node API를 쓰므로 Edge가 아닌 Node 런타임을 명시
+export const runtime = "nodejs"
 
 const CATEGORIES = ["AI", "디자인", "쇼핑", "기술", "뉴스", "엔터테인먼트", "교육", "비즈니스", "소셜", "금융", "기타"] as const
 type Category = typeof CATEGORIES[number]
@@ -32,9 +37,11 @@ const DOMAIN_MAP: Record<string, { title: string; category: Category; tags: stri
 
 async function fetchPage(url: string): Promise<string> {
   const controller = new AbortController()
+  // 타임아웃은 리다이렉트 hop 전체에 걸리는 총 예산이다
   const timer = setTimeout(() => controller.abort(), 7000)
   try {
-    const res = await fetch(url, {
+    // 리다이렉트를 직접 따라가며 hop마다 SSRF 재검증
+    const res = await fetchPublicUrl(url, {
       signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -42,11 +49,11 @@ async function fetchPage(url: string): Promise<string> {
         "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
       },
     })
-    clearTimeout(timer)
     return await res.text()
   } catch {
-    clearTimeout(timer)
     return ""
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -143,20 +150,27 @@ function extractBaseDomain(hostname: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // 로그인한 사용자만 서버 측 크롤링을 요청할 수 있다
+  const auth = await requireUid(req)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
     const { url } = await req.json() as { url: string }
     if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "URL이 필요합니다." }, { status: 400 })
     }
 
+    // SSRF 방어: 공개 http(s) 주소만 통과
     let parsed: URL
     try {
-      parsed = new URL(url.startsWith("http") ? url : `https://${url}`)
-    } catch {
-      return NextResponse.json({ error: "올바른 URL 형식이 아닙니다." }, { status: 400 })
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return NextResponse.json({ error: "http/https URL만 지원합니다." }, { status: 400 })
+      parsed = await assertPublicHttpUrl(url)
+    } catch (e) {
+      if (e instanceof UnsafeUrlError) {
+        return NextResponse.json({ error: e.message }, { status: 400 })
+      }
+      throw e
     }
 
     const hostname = parsed.hostname.replace(/^www\./, "")

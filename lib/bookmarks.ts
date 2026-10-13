@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebase"
 import {
-  collection, doc, addDoc, deleteDoc, updateDoc,
+  collection, doc, addDoc, deleteDoc, updateDoc, increment,
   onSnapshot, query, orderBy, Timestamp, getDocs, writeBatch,
 } from "firebase/firestore"
 import type { Bookmark } from "@/lib/types"
@@ -74,4 +74,20 @@ export async function updateBookmark(uid: string, bookmark: Bookmark): Promise<v
   const { id, ...data } = bookmark
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await updateDoc(doc(col(uid), id), data as any)
+}
+
+// 콘텐츠 변경 감지 결과만 부분 갱신한다.
+// notifications는 increment()로 원자적으로 올린다 — 클라이언트와 서버 크론이
+// 같은 북마크를 동시에 갱신할 수 있어서, 문서 전체를 되쓰면 증가분이 유실된다.
+export async function applyCheckResult(
+  uid: string,
+  id: string,
+  contentHash: string | null,
+  changed: boolean,
+): Promise<void> {
+  await updateDoc(doc(col(uid), id), {
+    ...(contentHash ? { contentHash } : {}),
+    lastChecked: new Date(),
+    ...(changed ? { notifications: increment(1) } : {}),
+  })
 }

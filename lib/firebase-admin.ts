@@ -31,3 +31,5 @@ if (!admin.apps.length) {
 
 export const adminMessaging = admin.apps.length ? admin.messaging() : null
 export const adminDb = admin.apps.length ? admin.firestore() : null
+// ID 토큰 검증용 — 설정이 없으면 null이고, 호출부는 반드시 fail-closed로 처리해야 한다
+export const adminAuth = admin.apps.length ? admin.auth() : null

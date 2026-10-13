@@ -1,85 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createHash } from "crypto"
-import webpush from "web-push"
+import { requireUid } from "@/lib/auth-server"
+import { adminDb } from "@/lib/firebase-admin"
+import { fetchContentHash } from "@/lib/content-hash"
+import { assertPublicHttpUrl, UnsafeUrlError } from "@/lib/url-guard"
+import { sendPush } from "@/lib/push"
 
-const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? ""
-
-if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails("mailto:kgh3274@gmail.com", VAPID_PUBLIC, VAPID_PRIVATE)
-}
-
-async function fetchContentHash(url: string): Promise<string | null> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 8000)
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        "Accept": "text/html",
-        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
-      },
-    })
-    clearTimeout(timer)
-    const html = await res.text()
-
-    const get = (re: RegExp) => re.exec(html)?.[1]?.trim() || ""
-    const title =
-      get(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) ||
-      get(/<title[^>]*>([^<]{2,150})<\/title>/i)
-    const description =
-      get(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i) ||
-      get(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)
-
-    const headings: string[] = []
-    const h1Re = /<h[123][^>]*>([^<]{3,100})<\/h[123]>/gi
-    let m: RegExpExecArray | null
-    while ((m = h1Re.exec(html)) !== null && headings.length < 3) headings.push(m[1].trim())
-
-    const key = [title, description, ...headings].join("|")
-    if (!key.trim()) return null
-    return createHash("md5").update(key).digest("hex")
-  } catch {
-    clearTimeout(timer)
-    return null
-  }
-}
-
-async function sendPushNotification(subscription: PushSubscriptionJSON, title: string) {
-  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return
-  try {
-    await webpush.sendNotification(
-      subscription as webpush.PushSubscription,
-      JSON.stringify({
-        title: "MarkMind 업데이트",
-        body: `"${title}"에 새로운 콘텐츠가 있습니다.`,
-        url: "/",
-      }),
-    )
-  } catch {
-    // 구독 만료 등 — 조용히 무시
-  }
-}
+// dns/crypto/web-push 등 Node API를 쓰므로 Edge가 아닌 Node 런타임을 명시
+export const runtime = "nodejs"
 
 export async function POST(req: NextRequest) {
+  // 로그인한 사용자만 서버 측 크롤링/푸시를 요청할 수 있다
+  const auth = await requireUid(req)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
-    const { url, currentHash, pushSubscription, bookmarkTitle } = await req.json() as {
+    const { url, currentHash, bookmarkTitle } = await req.json() as {
       url: string
       currentHash?: string
-      pushSubscription?: PushSubscriptionJSON
       bookmarkTitle?: string
     }
     if (!url) return NextResponse.json({ error: "URL 필요" }, { status: 400 })
 
+    // SSRF 방어: 공개 http(s) 주소만 통과
     let parsed: URL
     try {
-      parsed = new URL(url.startsWith("http") ? url : `https://${url}`)
-    } catch {
-      return NextResponse.json({ error: "잘못된 URL" }, { status: 400 })
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return NextResponse.json({ error: "http/https만 지원" }, { status: 400 })
+      parsed = await assertPublicHttpUrl(url)
+    } catch (e) {
+      if (e instanceof UnsafeUrlError) {
+        return NextResponse.json({ error: e.message }, { status: 400 })
+      }
+      throw e
     }
 
     const newHash = await fetchContentHash(parsed.href)
@@ -89,8 +41,12 @@ export async function POST(req: NextRequest) {
 
     const changed = !!currentHash && currentHash !== newHash
 
-    if (changed && pushSubscription && bookmarkTitle) {
-      await sendPushNotification(pushSubscription, bookmarkTitle)
+    // 푸시 구독은 요청 본문을 믿지 않고 검증된 uid로 서버에서 직접 조회한다
+    // (본문을 받으면 임의의 endpoint로 서버가 POST하는 푸시 릴레이로 악용된다)
+    if (changed && bookmarkTitle && adminDb) {
+      const userDoc = await adminDb.collection("users").doc(auth.uid).get()
+      const sub = userDoc.data()?.pushSubscription as PushSubscriptionJSON | undefined
+      if (sub) await sendPush(sub, bookmarkTitle)
     }
 
     return NextResponse.json({ changed, hash: newHash })
