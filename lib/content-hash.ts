@@ -31,8 +31,12 @@ export async function fetchContentHash(url: string, timeoutMs = 8000): Promise<s
     let m: RegExpExecArray | null
     while ((m = h1Re.exec(html)) !== null && headings.length < 3) headings.push(m[1].trim())
 
-    const key = [title, description, ...headings].join("|")
-    if (!key.trim()) return null
+    const parts = [title, description, ...headings]
+    // 전부 비어 있어도 join("|")은 구분자 "|"를 남기므로 key.trim()이 truthy가 된다.
+    // 그래서 "추출 실패 → null" 판정은 join 전에 조각 단위로 해야 한다.
+    // (조각이 하나라도 비어 있지 않으면 key는 기존과 완전히 동일하므로 저장된 해시는 그대로 유효하다.)
+    if (!parts.some(p => p.trim())) return null
+    const key = parts.join("|")
     return createHash("md5").update(key).digest("hex")
   } catch {
     // 타임아웃·네트워크 오류·차단된 URL 모두 "확인 불가"로 처리
