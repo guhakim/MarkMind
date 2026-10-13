@@ -84,9 +84,13 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     subscribeToPush().then(async (sub) => {
       setPushSubscription(sub)
       if (sub) {
-        await setDoc(doc(db, "users", user.uid), { pushSubscription: sub }, { merge: true }).catch(() => {})
+        // 이 쓰기가 실패하면 서버 cron이 구독 정보를 찾지 못해 푸시가 조용히 죽는다.
+        // 과거에 firestore.rules가 users/{uid} 쓰기를 막아 실제로 그랬고,
+        // 에러를 삼키는 바람에 아무도 알아채지 못했다 — 그래서 반드시 남긴다.
+        await setDoc(doc(db, "users", user.uid), { pushSubscription: sub }, { merge: true })
+          .catch((err) => { console.error("[push] 구독 정보 저장 실패 — 서버 알림이 동작하지 않습니다:", err) })
       }
-    }).catch(() => {})
+    }).catch((err) => { console.error("[push] 구독 처리 실패:", err) })
   }, [user?.uid])
 
   useEffect(() => {
