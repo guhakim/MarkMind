@@ -11,12 +11,13 @@ import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Sparkles, RefreshCw, Link } from "lucide-react"
 import { type Bookmark } from "@/lib/types"
-import { subscribeToBookmarks, addBookmark, deleteBookmark, updateBookmark } from "@/lib/bookmarks"
+import { subscribeToBookmarks, addBookmark, deleteBookmark, updateBookmark, applyCheckResult } from "@/lib/bookmarks"
+import { auth } from "@/lib/firebase"
 import { cn } from "@/lib/utils"
 import { useLanguage, translateCategory } from "@/lib/i18n"
 
 export default function Home() {
-  const { user, loading, pushSubscription } = useFirebaseAuth()
+  const { user, loading } = useFirebaseAuth()
 
   if (loading) {
     return (
@@ -30,11 +31,12 @@ export default function Home() {
     return <LandingPage />
   }
 
-  return <BookmarkApp uid={user.uid} pushSubscription={pushSubscription} />
+  return <BookmarkApp uid={user.uid} />
 }
 
-function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription: PushSubscriptionJSON | null }) {
-  const { t, lang } = useLanguage()
+// 푸시 구독은 서버가 Firestore(users/{uid})에서 직접 읽으므로 더 이상 클라이언트에서 넘기지 않는다
+function BookmarkApp({ uid }: { uid: string }) {
+  const { t } = useLanguage()
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [activeCategory, setActiveCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -63,9 +65,15 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
     }
     const toastId = toast.loading(t("dashboard.analyzing"))
     try {
+      // 서버가 ID 토큰을 검증하므로 반드시 함께 보낸다
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error("no auth token")
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ url: rawUrl }),
       })
       const data = res.ok ? await res.json() : {}
@@ -145,24 +153,25 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
       for (const bm of bellBookmarks) {
         if (cancelled) break
         try {
+          // 서버가 ID 토큰을 검증하므로 반드시 함께 보낸다
+          const token = await auth.currentUser?.getIdToken()
+          if (!token) break
           const res = await fetch("/api/check-update", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({
               url: bm.url,
               currentHash: bm.contentHash,
-              pushSubscription: pushSubscription ?? undefined,
               bookmarkTitle: bm.title,
             }),
           })
           if (!res.ok) continue
           const { changed, hash } = await res.json()
-          await updateBookmark(uid, {
-            ...bm,
-            contentHash: hash ?? bm.contentHash,
-            lastChecked: new Date(),
-            notifications: changed ? bm.notifications + 1 : bm.notifications,
-          })
+          // 문서 전체를 되쓰지 않고 변경 필드만 원자적으로 갱신한다
+          await applyCheckResult(uid, bm.id, hash ?? null, !!changed)
         } catch {
           // 개별 실패 무시
         }
@@ -172,7 +181,7 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
     }
     checkAll()
     return () => { cancelled = true }
-  }, [bookmarks.length, uid, pushSubscription])
+  }, [bookmarks.length, uid])
 
   const handleReanalyzeAll = async () => {
     if (reanalyzing || bookmarks.length === 0) return
@@ -182,9 +191,15 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
     for (let i = 0; i < bookmarks.length; i++) {
       const bm = bookmarks[i]
       try {
+        // 서버가 ID 토큰을 검증하므로 반드시 함께 보낸다
+        const token = await auth.currentUser?.getIdToken()
+        if (!token) throw new Error("no auth token")
         const res = await fetch("/api/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ url: bm.url }),
         })
         if (res.ok) {
@@ -313,10 +328,11 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
                 {activeCategory === "all" ? t("dashboard.allBookmarks") : translateCategory(t, activeCategory)}
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                {lang === "ko"
-                  ? `${filteredBookmarks.length}개의 북마크`
-                  : `${filteredBookmarks.length} bookmark${filteredBookmarks.length === 1 ? "" : "s"}`}
-                {searchQuery && (lang === "ko" ? ` • "${searchQuery}" 검색 결과` : ` • results for "${searchQuery}"`)}
+                {t(
+                  filteredBookmarks.length === 1 ? "dashboard.bookmarkCountOne" : "dashboard.bookmarkCount",
+                  { count: filteredBookmarks.length }
+                )}
+                {searchQuery && ` • ${t("dashboard.searchResults", { query: searchQuery })}`}
               </p>
             </div>
             {bookmarks.length > 0 && (
@@ -329,9 +345,7 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
                 {reanalyzing
-                  ? (lang === "ko"
-                      ? `재분석 중 ${reanalyzProgress.done}/${reanalyzProgress.total}`
-                      : `Reanalyzing ${reanalyzProgress.done}/${reanalyzProgress.total}`)
+                  ? t("dashboard.reanalyzing", { done: reanalyzProgress.done, total: reanalyzProgress.total })
                   : t("dashboard.reanalyzeAll")}
               </Button>
             )}
@@ -356,7 +370,7 @@ function BookmarkApp({ uid, pushSubscription }: { uid: string; pushSubscription:
               <h3 className="text-lg font-medium text-foreground mb-2">{t("dashboard.noBookmarksTitle")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-6">
                 {searchQuery
-                  ? (lang === "ko" ? `"${searchQuery}"에 대한 검색 결과가 없습니다` : `No results found for "${searchQuery}"`)
+                  ? t("dashboard.noSearchResults", { query: searchQuery })
                   : t("dashboard.noBookmarksDesc")
                 }
               </p>

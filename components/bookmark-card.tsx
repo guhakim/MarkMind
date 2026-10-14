@@ -62,7 +62,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) {
-  const { t, lang } = useLanguage()
+  const { t } = useLanguage()
   const faviconUrls = getFaviconUrls(bookmark.url)
   const [faviconIndex, setFaviconIndex] = useState(0)
   const [editOpen, setEditOpen] = useState(false)
@@ -215,16 +215,10 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
             <AlertDialogHeader>
               <AlertDialogTitle>{t("card.deleteConfirmTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {lang === "ko" ? (
-                  <>
-                    <span className="font-medium text-foreground">{bookmark.title}</span>을(를) 삭제하면
-                    복구할 수 없습니다.
-                  </>
-                ) : (
-                  <>
-                    Deleting <span className="font-medium text-foreground">{bookmark.title}</span> cannot be undone.
-                  </>
-                )}
+                {/* 언어별 어순이 달라 제목 앞/뒤 조각으로 나눠 조립한다 (한국어·일본어는 앞 조각이 빈 문자열) */}
+                {t("card.deleteConfirmPre")}
+                <span className="font-medium text-foreground">{bookmark.title}</span>
+                {t("card.deleteConfirmPost")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

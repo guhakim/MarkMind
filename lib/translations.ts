@@ -1,4 +1,4 @@
-export type Lang = "ko" | "en"
+export type Lang = "ko" | "en" | "ja"
 
 export const dictionaries = {
   ko: {
@@ -28,6 +28,11 @@ export const dictionaries = {
     "error.networkFailed": "네트워크 연결을 확인한 후 다시 시도해주세요.",
     "error.generic": "로그인 중 오류가 발생했습니다. 다시 시도해주세요.",
     "error.genericRetryLater": "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+
+    // 보안 자동 로그아웃 (비활동 감지)
+    "auth.inactivityWarning": "30초 후 보안을 위해 자동 로그아웃됩니다.",
+    "auth.inactivityStay": "로그인 유지",
+    "auth.inactivityLoggedOut": "3분간 활동이 없어 보안 로그아웃됐습니다.",
 
     // 기능 소개
     "features.ai.title": "AI 자동 분석",
@@ -105,6 +110,11 @@ export const dictionaries = {
     "dashboard.dropHereTitle": "여기에 링크를 놓으세요",
     "dashboard.dropHereDesc": "자동으로 AI가 분석해서 북마크에 추가합니다",
     "dashboard.analyzing": "AI 분석 중...",
+    "dashboard.bookmarkCount": "{count}개의 북마크",
+    "dashboard.bookmarkCountOne": "{count}개의 북마크",
+    "dashboard.searchResults": "\"{query}\" 검색 결과",
+    "dashboard.reanalyzing": "재분석 중 {done}/{total}",
+    "dashboard.noSearchResults": "\"{query}\"에 대한 검색 결과가 없습니다",
 
     // 토스트
     "toast.alreadyExists": "이미 저장된 북마크입니다.",
@@ -151,6 +161,14 @@ export const dictionaries = {
     "card.notifOn": "알림 켜기",
     "card.moveTooltip": "이동",
     "card.deleteConfirmTitle": "북마크를 삭제할까요?",
+    "card.deleteConfirmPre": "",
+    "card.deleteConfirmPost": "을(를) 삭제하면 복구할 수 없습니다.",
+
+    // 언어 전환 토글
+    "toggle.langAria": "현재 언어: {current}. 클릭하면 {next}로 전환됩니다",
+    "toggle.lang.en": "영어",
+    "toggle.lang.ko": "한국어",
+    "toggle.lang.ja": "일본어",
   },
   en: {
     "common.login": "Log in",
@@ -176,6 +194,10 @@ export const dictionaries = {
     "error.networkFailed": "Please check your network connection and try again.",
     "error.generic": "An error occurred while signing in. Please try again.",
     "error.genericRetryLater": "An error occurred while signing in. Please try again shortly.",
+
+    "auth.inactivityWarning": "You will be signed out automatically in 30 seconds for security.",
+    "auth.inactivityStay": "Stay signed in",
+    "auth.inactivityLoggedOut": "You were signed out for security after 3 minutes of inactivity.",
 
     "features.ai.title": "AI Auto-Analysis",
     "features.ai.desc": "When you save a bookmark, AI analyzes the content and automatically assigns a category",
@@ -246,6 +268,11 @@ export const dictionaries = {
     "dashboard.dropHereTitle": "Drop your link here",
     "dashboard.dropHereDesc": "AI will automatically analyze it and add it to your bookmarks",
     "dashboard.analyzing": "AI is analyzing...",
+    "dashboard.bookmarkCount": "{count} bookmarks",
+    "dashboard.bookmarkCountOne": "{count} bookmark",
+    "dashboard.searchResults": "results for \"{query}\"",
+    "dashboard.reanalyzing": "Reanalyzing {done}/{total}",
+    "dashboard.noSearchResults": "No results found for \"{query}\"",
 
     "toast.alreadyExists": "This bookmark is already saved.",
     "toast.addedSuccess": "Bookmark added!",
@@ -287,6 +314,165 @@ export const dictionaries = {
     "card.notifOn": "Turn on notifications",
     "card.moveTooltip": "Open",
     "card.deleteConfirmTitle": "Delete this bookmark?",
+    "card.deleteConfirmPre": "Deleting ",
+    "card.deleteConfirmPost": " cannot be undone.",
+
+    "toggle.langAria": "Current language: {current}. Click to switch to {next}",
+    "toggle.lang.en": "English",
+    "toggle.lang.ko": "Korean",
+    "toggle.lang.ja": "Japanese",
+  },
+  ja: {
+    "common.login": "ログイン",
+    "common.loginLoading": "ログイン中...",
+    "common.cancel": "キャンセル",
+    "common.save": "保存",
+    "common.delete": "削除",
+    "common.edit": "編集",
+    "common.close": "閉じる",
+    "common.logout": "ログアウト",
+    "common.inquiry": "お問い合わせ",
+
+    "hero.badge": "AIによるブックマーク管理",
+    "hero.headingPre": "ブックマークを ",
+    "hero.headingPost": "がかわりに整理します",
+    "hero.subtitle": "URLを保存するだけ。AIが自動で内容を分析してカテゴリーに分類し、あとから簡単に見つけられるように整理します。",
+    "hero.googleCta": "Googleで無料ではじめる",
+    "hero.freeNote": "クレジットカード不要 · 無料ではじめられます",
+
+    "error.popupBlocked": "ポップアップがブロックされました。ブラウザでポップアップを許可してから、もう一度お試しください。",
+    "error.unauthorizedDomainDev": "このドメインからのログインは許可されていません。Firebaseコンソールでドメインを追加してください。",
+    "error.unauthorizedDomainUser": "このドメインからのログインは許可されていません。管理者にお問い合わせください。",
+    "error.networkFailed": "ネットワーク接続を確認して、もう一度お試しください。",
+    "error.generic": "ログイン中にエラーが発生しました。もう一度お試しください。",
+    "error.genericRetryLater": "ログイン中にエラーが発生しました。しばらくしてから、もう一度お試しください。",
+
+    "auth.inactivityWarning": "セキュリティのため、30秒後に自動的にログアウトします。",
+    "auth.inactivityStay": "ログインを継続",
+    "auth.inactivityLoggedOut": "3分間操作がなかったため、セキュリティ上ログアウトしました。",
+
+    "features.ai.title": "AI自動分析",
+    "features.ai.desc": "ブックマークを保存すると、AIが内容を分析してカテゴリーを自動で分類します",
+    "features.smart.title": "スマート整理",
+    "features.smart.desc": "タグ・カテゴリー・検索で、数百件のブックマークもすばやく見つけられます",
+    "features.fast.title": "すばやく保存",
+    "features.fast.desc": "URLを入力するだけで、タイトル・説明・サムネイルを自動で取得してすぐに保存します",
+    "features.safe.title": "安全に保管",
+    "features.safe.desc": "Googleアカウントでログインして、ブックマークを安全に保管し、どこからでもアクセスできます",
+
+    "why.title": "MarkMindが選ばれる理由",
+    "why.subtitle": "単なるブックマークを超えて、知識を体系的に管理しましょう",
+
+    "cta.title": "今すぐはじめましょう",
+    "cta.desc": "Googleアカウント1つで、すべての機能を無料でご利用いただけます",
+    "cta.terms": "ログインすると、利用規約およびプライバシーポリシーに同意したものとみなされます",
+
+    "footer.copyright": "© 2025 MarkMind · AIブックマーク整理サービス",
+
+    "contact.title": "お問い合わせ",
+    "contact.subtitle": "ご不明な点がございましたら、いつでもお問い合わせください",
+    "contact.name": "お名前",
+    "contact.namePlaceholder": "山田太郎",
+    "contact.email": "メールアドレス",
+    "contact.message": "お問い合わせ内容",
+    "contact.messagePlaceholder": "お問い合わせ内容をご記入ください",
+    "contact.send": "送信する",
+    "contact.sending": "送信中...",
+    "contact.sentTitle": "お問い合わせを受け付けました！",
+    "contact.sentDesc": "できるだけ早くご返信いたします。",
+
+    "preview.chatgpt.desc": "OpenAIが開発した対話型AIサービスです。",
+    "preview.chatgpt.tag": "AI",
+    "preview.figma.desc": "ブラウザで使えるUI/UXデザインのコラボレーションツールです。",
+    "preview.figma.tag": "デザイン",
+    "preview.github.desc": "世界中の開発者が利用するコードホスティングプラットフォームです。",
+    "preview.github.tag": "技術",
+    "preview.midjourney.desc": "テキストから高品質な画像を生成するAIサービスです。",
+    "preview.midjourney.tag": "AI",
+    "preview.notion.desc": "メモ・ドキュメント・プロジェクト管理を1つにまとめたワークスペースです。",
+    "preview.notion.tag": "ビジネス",
+    "preview.dribbble.desc": "世界中のデザイナーが作品を共有するコミュニティです。",
+    "preview.dribbble.tag": "デザイン",
+
+    "header.searchPlaceholder": "ブックマークを検索...",
+
+    "sidebar.categoriesLabel": "カテゴリー",
+    "sidebar.aiActive": "AI分析 有効",
+    "sidebar.aiActiveDesc": "新しいブックマークを追加すると自動で分析します",
+
+    "category.all": "すべて",
+    "category.AI": "AI",
+    "category.디자인": "デザイン",
+    "category.쇼핑": "ショッピング",
+    "category.기술": "技術",
+    "category.뉴스": "ニュース",
+    "category.엔터테인먼트": "エンタメ",
+    "category.교육": "教育",
+    "category.비즈니스": "ビジネス",
+    "category.소셜": "ソーシャル",
+    "category.금융": "金融",
+    "category.기타": "その他",
+
+    "dashboard.allBookmarks": "すべてのブックマーク",
+    "dashboard.reanalyzeAll": "すべて再分析",
+    "dashboard.noBookmarksTitle": "ブックマークがありません",
+    "dashboard.noBookmarksDesc": "新しいブックマークを追加すると、AIが自動で分析して整理します",
+    "dashboard.dropHereTitle": "ここにリンクをドロップ",
+    "dashboard.dropHereDesc": "AIが自動で分析してブックマークに追加します",
+    "dashboard.analyzing": "AI分析中...",
+    "dashboard.bookmarkCount": "{count}件のブックマーク",
+    "dashboard.bookmarkCountOne": "{count}件のブックマーク",
+    "dashboard.searchResults": "「{query}」の検索結果",
+    "dashboard.reanalyzing": "再分析中 {done}/{total}",
+    "dashboard.noSearchResults": "「{query}」に一致する検索結果はありません",
+
+    "toast.alreadyExists": "すでに保存されているブックマークです。",
+    "toast.addedSuccess": "ブックマークを追加しました！",
+    "toast.addFailed": "ブックマークの追加に失敗しました。",
+    "toast.loadFailed": "ブックマークを読み込めませんでした。ネットワークを確認してください。",
+    "toast.reanalyzeComplete": "すべてのブックマークの再分析が完了しました。",
+    "toast.saveFailed": "ブックマークの保存に失敗しました。もう一度お試しください。",
+    "toast.deleteFailed": "ブックマークの削除に失敗しました。",
+    "toast.editFailed": "ブックマークの更新に失敗しました。",
+    "toast.invalidUrl": "有効なURLではありません。",
+
+    "field.title": "タイトル",
+    "field.description": "説明",
+    "field.category": "カテゴリー",
+    "field.tags": "タグ",
+
+    "add.trigger": "ブックマーク追加",
+    "add.dialogTitle": "AIでブックマークを追加",
+    "add.dialogDesc": "URLを入力すると、AIが自動でサイトを分析して整理します",
+    "add.urlLabel": "サイトURL",
+    "add.analyzeBtn": "分析",
+    "add.analyzingTitle": "サイトを分析しています...",
+    "add.analyzingDesc": "カテゴリー・説明・タグを自動で生成します",
+    "add.analysisComplete": "分析完了",
+    "add.siteName": "サイト名",
+    "add.errorAnalyzeFailed": "分析に失敗しました。もう一度お試しください。",
+    "add.errorNetwork": "ネットワークエラーが発生しました。もう一度お試しください。",
+    "add.errorDuplicate": "すでに保存されているブックマークです。同じURLが登録されています。",
+
+    "edit.dialogTitle": "ブックマークを編集",
+    "edit.categoryPlaceholder": "カテゴリーを選択",
+    "edit.customCategory": "✏️ 自分で入力...",
+    "edit.customCategoryPlaceholder": "カテゴリー名を入力してください",
+    "edit.tagsHint": "（カンマ区切り）",
+    "edit.tagsPlaceholder": "AI, 開発, 便利なサイト",
+
+    "card.notifRead": "既読にする",
+    "card.notifOff": "通知をオフ",
+    "card.notifOn": "通知をオン",
+    "card.moveTooltip": "開く",
+    "card.deleteConfirmTitle": "このブックマークを削除しますか？",
+    "card.deleteConfirmPre": "",
+    "card.deleteConfirmPost": "を削除すると元に戻せません。",
+
+    "toggle.langAria": "現在の言語: {current}。クリックすると{next}に切り替わります",
+    "toggle.lang.en": "英語",
+    "toggle.lang.ko": "韓国語",
+    "toggle.lang.ja": "日本語",
   },
 } as const
 

@@ -1,11 +1,14 @@
 "use client"
 
-import { signInWithPopup } from "firebase/auth"
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth"
 import { auth, googleProvider } from "@/lib/firebase"
+import { useRouter } from "next/navigation"
+import { useFirebaseAuth } from "@/components/firebase-auth-provider"
 import { Sparkles, BookmarkCheck, Brain, Zap, Shield, Mail } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageToggle } from "@/components/language-toggle"
+import { ContactForm } from "@/components/contact-form"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -16,104 +19,72 @@ const GoogleIcon = () => (
   </svg>
 )
 
-function ContactForm() {
+// Google 로그인 — 팝업 우선, 팝업 차단(모바일 등) 시 redirect 폴백.
+// /login 경로로 직접 들어온 경우를 위해 redirect 결과 처리와 로그인 후 이동도 함께 담당한다.
+function useGoogleSignIn() {
+  const router = useRouter()
   const { t } = useLanguage()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [message, setMessage] = useState("")
-  const [sent, setSent] = useState(false)
-  const [sending, setSending] = useState(false)
+  const { user, loading: authLoading } = useFirebaseAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSending(true)
-    try {
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          access_key: "485d4cfc-4305-43a5-8d82-098fd4edf867",
-          subject: `[MarkMind 문의] ${name}`,
-          name,
-          email,
-          message,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setSent(true)
-      } else {
-        throw new Error("전송 실패")
+  // 마운트 시 1회만 — redirect 로그인 후 결과 처리
+  useEffect(() => {
+    getRedirectResult(auth).catch((e: unknown) => {
+      const code = (e as { code?: string }).code
+      if (code === "auth/unauthorized-domain") {
+        setError(t("error.unauthorizedDomainUser"))
+      } else if (code === "auth/network-request-failed") {
+        setError(t("error.networkFailed"))
+      } else if (code) {
+        setError(t("error.genericRetryLater"))
       }
-    } catch {
-      window.location.href = `mailto:felpen@naver.com?subject=${encodeURIComponent(`[MarkMind 문의] ${name}`)}&body=${encodeURIComponent(`이름: ${name}\n이메일: ${email}\n\n${message}`)}`
-      setSent(true)
-    } finally {
-      setSending(false)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 로그인 완료 시 메인으로 이동 (/login 경로에서만 실제로 동작)
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/")
+    }
+  }, [user, authLoading, router])
+
+  async function signIn() {
+    setLoading(true)
+    setError("")
+    try {
+      await signInWithPopup(auth, googleProvider)
+    } catch (e: unknown) {
+      console.error(e)
+      const code = (e as { code?: string }).code
+      if (code === "auth/popup-blocked" || code === "auth/popup-cancelled-by-user") {
+        // 모바일 등 팝업 차단 환경 → redirect 방식으로 전환
+        try {
+          await signInWithRedirect(auth, googleProvider)
+        } catch {
+          setError(t("error.generic"))
+          setLoading(false)
+        }
+      } else if (code === "auth/unauthorized-domain") {
+        setError(t("error.unauthorizedDomainUser"))
+        setLoading(false)
+      } else if (code === "auth/network-request-failed") {
+        setError(t("error.networkFailed"))
+        setLoading(false)
+      } else {
+        setError(t("error.genericRetryLater"))
+        setLoading(false)
+      }
     }
   }
 
-  if (sent) {
-    return (
-      <div className="text-center py-8 bg-primary/5 border border-primary/20 rounded-2xl">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-          <Mail className="w-6 h-6 text-primary" />
-        </div>
-        <p className="font-semibold text-foreground">{t("contact.sentTitle")}</p>
-        <p className="text-sm text-muted-foreground mt-1">{t("contact.sentDesc")}</p>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-card border border-border rounded-2xl p-6">
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">{t("contact.name")}</label>
-        <input
-          required
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder={t("contact.namePlaceholder")}
-          className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">{t("contact.email")}</label>
-        <input
-          required
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="example@email.com"
-          className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">{t("contact.message")}</label>
-        <textarea
-          required
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          placeholder={t("contact.messagePlaceholder")}
-          rows={4}
-          className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={sending}
-        className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
-      >
-        {sending ? t("contact.sending") : t("contact.send")}
-      </button>
-    </form>
-  )
+  return { signIn, loading, error }
 }
 
 export function LandingPage() {
   const { t } = useLanguage()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const { signIn: handleGoogleLogin, loading, error } = useGoogleSignIn()
 
   const FEATURES = [
     { icon: Brain, title: t("features.ai.title"), desc: t("features.ai.desc") },
@@ -130,25 +101,6 @@ export function LandingPage() {
     { title: "Notion", url: "https://notion.so", desc: t("preview.notion.desc"), tag: t("preview.notion.tag"), tagColor: "bg-cyan-500/20 text-cyan-400", favicon: "https://www.google.com/s2/favicons?domain=notion.so&sz=64", iconBg: "" },
     { title: "Dribbble", url: "https://dribbble.com", desc: t("preview.dribbble.desc"), tag: t("preview.dribbble.tag"), tagColor: "bg-rose-500/20 text-rose-400", favicon: "https://www.google.com/s2/favicons?domain=dribbble.com&sz=64", iconBg: "bg-[#ea4c89]" },
   ]
-
-  async function handleGoogleLogin() {
-    setLoading(true)
-    setError("")
-    try {
-      await signInWithPopup(auth, googleProvider)
-    } catch (e: unknown) {
-      console.error(e)
-      const code = (e as { code?: string }).code
-      if (code === "auth/popup-blocked") {
-        setError(t("error.popupBlocked"))
-      } else if (code === "auth/unauthorized-domain") {
-        setError(t("error.unauthorizedDomainDev"))
-      } else {
-        setError(t("error.generic"))
-      }
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-dvh bg-background flex flex-col">
@@ -282,7 +234,7 @@ export function LandingPage() {
             <h2 className="text-2xl font-bold text-foreground">{t("contact.title")}</h2>
           </div>
           <p className="text-sm text-muted-foreground text-center mb-8">{t("contact.subtitle")}</p>
-          <ContactForm />
+          <ContactForm variant="page" />
         </div>
       </section>
 

@@ -1,41 +1,28 @@
 "use client"
 
 import { useLanguage } from "@/lib/i18n"
+import type { Lang } from "@/lib/translations"
+
+// 순환 순서(en → ko → ja → en)에서 각 언어의 다음 언어 — aria-label 안내용
+const NEXT_LANG: Record<Lang, Lang> = { en: "ko", ko: "ja", ja: "en" }
+
+// 노출 라벨 — 일본어는 언어 코드가 "ja"지만 사용자에게는 "JP"로 보여준다.
+const LABELS: Record<Lang, string> = { en: "EN", ko: "KO", ja: "JP" }
 
 export function LanguageToggle({ className = "" }: { className?: string }) {
-  const { lang, setLang } = useLanguage()
+  const { lang, toggleLang, t } = useLanguage()
 
   return (
-    <div
-      className={`h-9 md:h-10 flex items-center gap-0.5 rounded-full border border-border bg-secondary px-1 text-xs md:text-sm font-medium shrink-0 ${className}`}
+    <button
+      type="button"
+      onClick={toggleLang}
+      aria-label={t("toggle.langAria", {
+        current: t(`toggle.lang.${lang}`),
+        next: t(`toggle.lang.${NEXT_LANG[lang]}`),
+      })}
+      className={`h-9 md:h-10 min-w-11 md:min-w-12 flex items-center justify-center rounded-full border border-border bg-primary px-2 text-xs md:text-sm font-medium text-primary-foreground shrink-0 transition-colors hover:bg-primary/90 ${className}`}
     >
-      <button
-        type="button"
-        onClick={() => setLang("en")}
-        aria-label="Switch to English"
-        aria-pressed={lang === "en"}
-        className={`px-2 py-1 rounded-full transition-colors ${
-          lang === "en"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        EN
-      </button>
-      <span className="text-muted-foreground/50">/</span>
-      <button
-        type="button"
-        onClick={() => setLang("ko")}
-        aria-label="한국어로 전환"
-        aria-pressed={lang === "ko"}
-        className={`px-2 py-1 rounded-full transition-colors ${
-          lang === "ko"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        KO
-      </button>
-    </div>
+      {LABELS[lang]}
+    </button>
   )
 }

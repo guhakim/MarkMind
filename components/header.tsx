@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Search, Bell, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -28,12 +29,12 @@ export function Header({
   return (
     <header className="h-14 md:h-16 border-b border-border bg-card px-3 md:px-6 flex items-center justify-between gap-3 shrink-0">
       {/* 로고 — 사이드바 없는 작은 화면 전용 */}
-      <a href="/" className="flex sm:hidden items-center gap-2 shrink-0">
+      <Link href="/" className="flex sm:hidden items-center gap-2 shrink-0">
         <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <span className="font-bold text-base text-foreground">MarkMind</span>
-      </a>
+      </Link>
 
       {/* 검색바 */}
       <div className="flex-1 max-w-xs md:max-w-md">
