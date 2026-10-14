@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { FirebaseAuthProvider } from '@/components/firebase-auth-provider'
@@ -37,15 +38,21 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // middleware.ts가 요청마다 생성한 CSP nonce.
+  // next-themes는 FOUC 방지용 인라인 스크립트를 dangerouslySetInnerHTML로 넣으므로
+  // nonce를 직접 넘겨야 script-src에서 'unsafe-inline' 없이도 실행된다.
+  // (Next.js 자신의 부트스트랩 스크립트는 요청 CSP 헤더를 보고 알아서 nonce를 붙인다.)
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
   return (
     <html lang="ko" className={`${geist.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange nonce={nonce}>
           <LanguageProvider>
             <FirebaseAuthProvider>
               {children}

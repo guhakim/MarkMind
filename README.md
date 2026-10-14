@@ -249,12 +249,19 @@ users/
 
 - **Firestore 규칙**: 본인의 데이터만 읽기·쓰기 가능
 - **보안 헤더**: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`,
-  `Permissions-Policy`, `Strict-Transport-Security`, `Content-Security-Policy` 적용
-  (`next.config.mjs`와 `netlify.toml`에 동일한 값으로 중복 정의 — 한쪽만 고치지 말 것)
-- **CSP 한계 (주의)**: `script-src`에 `'unsafe-inline'`과 `'unsafe-eval'`이 포함돼 있어
-  스크립트 주입에 대한 방어력은 제한적입니다. Next.js App Router의 인라인 부트스트랩 스크립트와
-  `next-themes`의 인라인 테마 스크립트, 그리고 개발 서버의 eval 기반 HMR 때문입니다.
-  완전히 제거하려면 middleware 기반 nonce CSP로 전환해야 합니다.
+  `Permissions-Policy`, `Strict-Transport-Security`는 `next.config.mjs`와 `netlify.toml`에
+  동일한 값으로 정의 — 한쪽만 고치지 말 것
+- **CSP (nonce 기반)**: `Content-Security-Policy`는 `proxy.ts`가 요청마다 base64 nonce를
+  만들어 요청·응답 헤더에 함께 넣는 단일 출처입니다. `next.config.mjs`와 `netlify.toml`에는
+  CSP를 두지 않습니다(중복되면 브라우저가 두 정책을 각각 강제해서 추적이 불가능해집니다).
+  `script-src`에는 `'unsafe-inline'`이 없고 `'unsafe-eval'`은 개발 모드에서만 붙습니다.
+  Next.js 부트스트랩·번들 스크립트는 요청 CSP 헤더를 보고 자동으로 nonce를 받고,
+  `next-themes`의 인라인 테마 스크립트는 `app/layout.tsx`가 `x-nonce`를 읽어 직접 넘깁니다.
+- **CSP 남은 한계 (주의)**: `style-src`에는 `'unsafe-inline'`이 남아 있습니다.
+  React가 `style={{...}}`를 inline style 속성으로 렌더하고(`style-src-attr`가 지배하므로
+  nonce로 허용 불가), `sonner`가 런타임에 nonce 없는 `<style>` 요소를 주입하기 때문입니다.
+- **nonce의 대가**: nonce는 요청마다 달라지므로 `/`, `/login`, `/_not-found`가
+  정적 프리렌더(○)에서 요청별 동적 렌더(ƒ)로 바뀌었습니다. CDN 캐싱·ISR·PPR은 쓸 수 없습니다.
 - **URL 검증**: `http/https` 프로토콜만 허용, XSS 방지
 - **Cron 보호**: `CRON_SECRET` Bearer 토큰 인증
 - **자동 로그아웃**: 3분 비활동 시 자동 세션 종료
