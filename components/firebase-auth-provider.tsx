@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
 import { onAuthStateChanged, signOut, User } from "firebase/auth"
-import { auth, db } from "@/lib/firebase"
+import { auth, db, getAutoLogoutPref, setAutoLogoutPref } from "@/lib/firebase"
 import { subscribeToPush } from "@/lib/firebase-messaging"
 import { doc, setDoc } from "firebase/firestore"
 import { toast } from "sonner"
@@ -17,9 +17,18 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   pushSubscription: PushSubscriptionJSON | null
+  // 3분 비활동 자동 로그아웃 (선택 기능, 기본 꺼짐)
+  autoLogout: boolean
+  setAutoLogout: (on: boolean) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, pushSubscription: null })
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  pushSubscription: null,
+  autoLogout: false,
+  setAutoLogout: async () => {},
+})
 
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
   // app/layout.tsx 기준 LanguageProvider > FirebaseAuthProvider 순서이므로 안전하게 사용 가능
@@ -27,6 +36,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [pushSubscription, setPushSubscription] = useState<PushSubscriptionJSON | null>(null)
+  // 값은 메뉴를 열 때만 화면에 나오므로 서버 렌더(false)와 달라도 하이드레이션 불일치가 없다
+  const [autoLogout, setAutoLogoutState] = useState(getAutoLogoutPref)
   const logoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warnToastId = useRef<string | number | null>(null)
@@ -61,9 +72,14 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     resetTimersRef.current = resetTimers
   }, [resetTimers])
 
-  // 비활동 감지 (로그인 상태일 때만)
+  const setAutoLogout = useCallback(async (on: boolean) => {
+    await setAutoLogoutPref(on)
+    setAutoLogoutState(on)
+  }, [])
+
+  // 비활동 감지 (로그인 상태이고 자동 로그아웃을 켰을 때만)
   useEffect(() => {
-    if (!user) { clearTimers(); return }
+    if (!user || !autoLogout) { clearTimers(); return }
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click", "pointerdown"]
     // 1초 안에 연달아 들어오는 리셋은 무시 — 3분 로그아웃 / 30초 경고 기준은 그대로다.
     const handler = () => {
@@ -76,7 +92,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     lastResetAt.current = Date.now()
     resetTimers()
     return () => { events.forEach(e => window.removeEventListener(e, handler)); clearTimers() }
-  }, [user, resetTimers, clearTimers])
+  }, [user, autoLogout, resetTimers, clearTimers])
 
   // Push 구독 (로그인 직후) — Firestore에도 저장해 서버 cron이 사용
   useEffect(() => {
@@ -103,7 +119,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     return () => { clearTimeout(timeout); unsubscribe() }
   }, [])
 
-  return <AuthContext.Provider value={{ user, loading, pushSubscription }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, pushSubscription, autoLogout, setAutoLogout }}>{children}</AuthContext.Provider>
 }
 
 export function useFirebaseAuth() {
