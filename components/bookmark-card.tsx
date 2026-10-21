@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ExternalLink, Bell, Trash2, Edit3 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,7 @@ import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
 import { useLanguage, translateCategory } from "@/lib/i18n"
 import type { Bookmark } from "@/lib/types"
 import type { BookmarkPatch } from "@/lib/bookmarks"
+import { needsKoreanTranslation, translateToKorean } from "@/lib/translate-client"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -63,7 +64,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const faviconUrls = getFaviconUrls(bookmark.url)
   const [faviconIndex, setFaviconIndex] = useState(0)
   const [editOpen, setEditOpen] = useState(false)
@@ -71,6 +72,19 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
   // 썸네일을 못 불러오면(핫링크 차단·삭제된 이미지) 카드에서 빼고 예전 모양으로 보여준다
   const [imageFailed, setImageFailed] = useState(false)
   const showImage = !!bookmark.image && !imageFailed
+
+  // 한국어 화면에서 설명이 외국어면 한글 번역을 보여준다. 번역은 한 번만 받아 북마크에 저장해 둔다.
+  const translationReady = !!bookmark.descriptionKo && bookmark.descriptionKoSource === bookmark.description
+  const description = lang === "ko" && translationReady ? bookmark.descriptionKo : bookmark.description
+  const onEditRef = useRef(onEdit)
+  useEffect(() => { onEditRef.current = onEdit }, [onEdit])
+  useEffect(() => {
+    if (lang !== "ko" || translationReady || !needsKoreanTranslation(bookmark.description)) return
+    const source = bookmark.description
+    translateToKorean(source).then(ko => {
+      if (ko) onEditRef.current(bookmark.id, { descriptionKo: ko, descriptionKoSource: source })
+    })
+  }, [lang, translationReady, bookmark.id, bookmark.description])
   const faviconUrl = faviconUrls[faviconIndex] ?? null
 
   const categoryColor = CATEGORY_COLORS[bookmark.category] ?? CATEGORY_COLORS["기타"]
@@ -212,7 +226,7 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
             </div>
 
             <p className="text-[13px] text-muted-foreground mt-2 line-clamp-2">
-              {bookmark.description}
+              {description}
             </p>
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${categoryColor}`}>
