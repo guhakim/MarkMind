@@ -9,6 +9,7 @@ import { BookmarkCard } from "@/components/bookmark-card"
 import { Header } from "@/components/header"
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { ImportBookmarksDialog } from "@/components/import-bookmarks-dialog"
+import { ShareCollectionDialog } from "@/components/share-collection-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Sparkles, RefreshCw, Link, Upload } from "lucide-react"
 import { type Bookmark } from "@/lib/types"
@@ -341,6 +342,10 @@ function BookmarkApp({ uid }: { uid: string }) {
             </div>
             {bookmarks.length > 0 && (
               <div className="flex items-center gap-2 shrink-0">
+                <ShareCollectionDialog
+                  category={activeCategory}
+                  count={activeCategory === "all" ? bookmarks.length : bookmarks.filter(b => b.category === activeCategory).length}
+                />
                 <ImportBookmarksDialog
                   uid={uid}
                   existingUrls={bookmarks.map(b => b.url)}
