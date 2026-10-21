@@ -5,6 +5,7 @@ export interface AnalyzeResult {
   description?: string
   category?: string
   tags?: string[]
+  image?: string | null
 }
 
 /** 브라우저에서 /api/analyze를 호출한다. 실패하면 빈 객체 — 호출부가 기본값으로 채운다. */

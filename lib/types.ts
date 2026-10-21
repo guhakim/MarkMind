@@ -6,6 +6,7 @@ export interface Bookmark {
   category: string
   tags: string[]
   favicon: string | null
+  image?: string | null      // 페이지 대표 이미지(og:image) — 카드 썸네일
   notifications: number
   notifyEnabled?: boolean    // 알림 구독 여부 (벨 버튼으로 토글)
   createdAt: Date

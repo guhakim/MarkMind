@@ -86,6 +86,7 @@ function BookmarkApp({ uid }: { uid: string }) {
         category: data.category || "기타",
         tags: data.tags || [],
         favicon: null,
+        image: data.image ?? null,
         notifications: 0,
         createdAt: new Date(),
         lastVisited: null,
@@ -216,6 +217,7 @@ function BookmarkApp({ uid }: { uid: string }) {
             description: data.description || bm.description,
             category: data.category || bm.category,
             tags: data.tags?.length ? data.tags : bm.tags,
+            image: data.image ?? bm.image ?? null,
           })
         }
       } catch {

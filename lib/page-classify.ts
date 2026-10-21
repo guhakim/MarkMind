@@ -54,8 +54,28 @@ export function extractFromHtml(html: string) {
   // h1 태그에서 주요 텍스트 추출
   const h1 = first(/<h1[^>]*>([^<]{2,100})<\/h1>/i)
   const keywords = meta("keywords", 2)
+  // 카드 썸네일용 대표 이미지 (상대 경로일 수 있어 resolveImageUrl로 마무리한다)
+  const image = meta("og:image:secure_url", 4) || meta("og:image", 4) || meta("twitter:image", 4) || meta("twitter:image:src", 4)
 
-  return { title, description, siteName, h1, keywords }
+  return { title, description, siteName, h1, keywords, image }
+}
+
+/**
+ * 대표 이미지 주소를 페이지 주소 기준 절대 URL로 만든다.
+ * https만 허용한다 — 앱이 https로 서비스되므로 http 이미지는 혼합 콘텐츠로 막히고,
+ * data:/javascript: 같은 값은 카드에 넣지 않는다. 너무 긴 주소도 버린다.
+ */
+export function resolveImageUrl(raw: string, pageUrl: string): string | null {
+  if (!raw) return null
+  try {
+    const u = new URL(raw, pageUrl)
+    if (u.protocol === "http:") u.protocol = "https:"
+    if (u.protocol !== "https:") return null
+    const href = u.href
+    return href.length <= 1000 ? href : null
+  } catch {
+    return null
+  }
 }
 
 // 짧은 영어 단어는 \b로 감싼다 — 그렇지 않으면 guide/build의 "ui", small의 "mall",

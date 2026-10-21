@@ -68,6 +68,9 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
   const [faviconIndex, setFaviconIndex] = useState(0)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  // 썸네일을 못 불러오면(핫링크 차단·삭제된 이미지) 카드에서 빼고 예전 모양으로 보여준다
+  const [imageFailed, setImageFailed] = useState(false)
+  const showImage = !!bookmark.image && !imageFailed
   const faviconUrl = faviconUrls[faviconIndex] ?? null
 
   const categoryColor = CATEGORY_COLORS[bookmark.category] ?? CATEGORY_COLORS["기타"]
@@ -85,7 +88,30 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
   }
 
   return (
-    <Card className="overflow-hidden border-border/50 bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+    <Card className="overflow-hidden gap-0 border-border/50 bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+      {showImage && (
+        <a
+          href={isSafeUrl(bookmark.url) ? bookmark.url : "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={-1}
+          aria-hidden
+          // Card의 위쪽 여백(py-6)을 상쇄해 이미지를 카드 위 끝에 붙인다
+          className="-mt-6 block"
+        >
+          {/* 임의의 외부 도메인 이미지라 next/image(remotePatterns 필요) 대신 img를 쓴다 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={bookmark.image!}
+            alt=""
+            loading="lazy"
+            // 일부 CDN은 다른 사이트에서 온 Referer를 보고 이미지를 막는다
+            referrerPolicy="no-referrer"
+            className="w-full aspect-[1.91/1] object-cover bg-secondary"
+            onError={() => setImageFailed(true)}
+          />
+        </a>
+      )}
       <CardContent className="p-4">
         {/* 상단: 파비콘 + 제목/URL + 액션 버튼 */}
         <div className="flex items-start gap-3">

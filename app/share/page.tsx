@@ -69,6 +69,7 @@ function ShareSaver({ uid }: { uid: string }) {
           category: data.category || "기타",
           tags: data.tags || [],
           favicon: null,
+          image: data.image ?? null,
           notifications: 0,
           createdAt: new Date(),
           lastVisited: null,
