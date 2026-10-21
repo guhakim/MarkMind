@@ -5,7 +5,8 @@ import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useFirebaseAuth } from "@/components/firebase-auth-provider"
 import { ContactDialog } from "@/components/contact-dialog"
-import { LogOut, User, MessageSquare } from "lucide-react"
+import { QuickSaveDialog } from "@/components/quick-save-dialog"
+import { LogOut, User, MessageSquare, Zap } from "lucide-react"
 import { toast } from "sonner"
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export function UserMenu() {
   const { t } = useLanguage()
   const { user, loading, autoLogout, setAutoLogout } = useFirebaseAuth()
   const [contactOpen, setContactOpen] = useState(false)
+  const [quickSaveOpen, setQuickSaveOpen] = useState(false)
 
   if (loading) {
     return <div className="w-8 h-8 rounded-full bg-secondary animate-pulse" />
@@ -60,6 +62,13 @@ export function UserMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer"
+            onSelect={() => setQuickSaveOpen(true)}
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            {t("quickSave.menu")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
             onSelect={(e) => { e.preventDefault(); setContactOpen(true) }}
           >
             <MessageSquare className="w-4 h-4 mr-2" />
@@ -86,6 +95,8 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <QuickSaveDialog open={quickSaveOpen} onOpenChange={setQuickSaveOpen} />
 
       {/* 문의하기 다이얼로그 — DropdownMenu 외부에서 제어 */}
       <ContactDialog

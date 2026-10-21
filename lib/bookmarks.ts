@@ -4,6 +4,7 @@ import {
   onSnapshot, query, orderBy, Timestamp, getDocs, writeBatch,
 } from "firebase/firestore"
 import type { Bookmark } from "@/lib/types"
+import { normalizeBookmarkUrl } from "@/lib/bookmark-import"
 
 const col = (uid: string) => collection(db, "users", uid, "bookmarks")
 
@@ -64,6 +65,15 @@ export function subscribeToBookmarks(
 export async function addBookmark(uid: string, bookmark: Bookmark): Promise<void> {
   const { id: _id, ...data } = bookmark
   await addDoc(col(uid), data)
+}
+
+// 같은 URL이 이미 저장돼 있으면 그 북마크를 돌려준다 (중복 기준은 다른 추가 경로와 같다).
+// 목록 화면 없이 저장하는 /share에서 쓴다.
+export async function findBookmarkByUrl(uid: string, url: string): Promise<Bookmark | null> {
+  const key = normalizeBookmarkUrl(url)
+  const snap = await getDocs(col(uid))
+  const hit = snap.docs.find(d => typeof d.data().url === "string" && normalizeBookmarkUrl(d.data().url) === key)
+  return hit ? fromFirestore(hit.id, hit.data()) : null
 }
 
 export async function deleteBookmark(uid: string, id: string): Promise<void> {
