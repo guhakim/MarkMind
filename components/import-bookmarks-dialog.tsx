@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useLanguage } from "@/lib/i18n"
-import { auth } from "@/lib/firebase"
+import { analyzeUrl, type AnalyzeResult } from "@/lib/analyze-client"
 import { addBookmark } from "@/lib/bookmarks"
 import { dedupeImports, parseBookmarkHtml, type ImportedBookmark } from "@/lib/bookmark-import"
 import type { Bookmark } from "@/lib/types"
@@ -31,23 +31,7 @@ interface ImportBookmarksDialogProps {
   trigger?: React.ReactNode
 }
 
-async function analyze(url: string): Promise<{ title?: string; description?: string; category?: string; tags?: string[] }> {
-  // 서버가 ID 토큰을 검증하므로 반드시 함께 보낸다
-  const token = await auth.currentUser?.getIdToken()
-  if (!token) return {}
-  try {
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ url }),
-    })
-    return res.ok ? await res.json() : {}
-  } catch {
-    return {}
-  }
-}
-
-function toBookmark(item: ImportedBookmark, data: Awaited<ReturnType<typeof analyze>>): Bookmark {
+function toBookmark(item: ImportedBookmark, data: AnalyzeResult): Bookmark {
   let hostname = item.url
   try { hostname = new URL(item.url).hostname } catch { /* 그대로 둔다 */ }
   // 브라우저 폴더 이름은 사용자가 직접 붙인 분류라 첫 번째 태그로 살린다
@@ -114,7 +98,7 @@ export function ImportBookmarksDialog({ uid, existingUrls, trigger }: ImportBook
         const item = items[cursor++]
         if (!item) return
         try {
-          await addBookmark(uid, toBookmark(item, await analyze(item.url)))
+          await addBookmark(uid, toBookmark(item, await analyzeUrl(item.url)))
         } catch {
           failed++
         }
