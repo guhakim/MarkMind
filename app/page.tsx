@@ -246,11 +246,6 @@ function BookmarkApp({ uid }: { uid: string }) {
     })
   }, [bookmarks, activeCategory, searchQuery])
 
-  const totalNotifications = useMemo(
-    () => bookmarks.reduce((sum, b) => sum + b.notifications, 0),
-    [bookmarks]
-  )
-
   const handleAddBookmark = (bookmark: Bookmark) => {
     addBookmark(uid, bookmark).catch(() => {
       toast.error(t("toast.saveFailed"))
@@ -308,7 +303,8 @@ function BookmarkApp({ uid }: { uid: string }) {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAddBookmark={handleAddBookmark}
-          totalNotifications={totalNotifications}
+          bookmarks={bookmarks}
+          onEditBookmark={handleEditBookmark}
           existingUrls={bookmarks.map(b => b.url)}
         />
 

@@ -13,4 +13,5 @@ export interface Bookmark {
   lastVisited: Date | null
   contentHash?: string       // 마지막으로 확인한 페이지 콘텐츠 해시
   lastChecked?: Date | null  // 마지막 콘텐츠 체크 시각
+  lastChangedAt?: Date | null // 마지막으로 변경이 감지된 시각 (알림함 정렬·표시)
 }

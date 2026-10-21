@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { Search, Bell, Sparkles } from "lucide-react"
+import { Search, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { UserMenu } from "@/components/user-menu"
 import { LanguageToggle } from "@/components/language-toggle"
+import { NotificationMenu } from "@/components/notification-menu"
+import type { BookmarkPatch } from "@/lib/bookmarks"
 import { useLanguage } from "@/lib/i18n"
 import type { Bookmark } from "@/lib/types"
 
@@ -14,7 +15,8 @@ interface HeaderProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   onAddBookmark: (bookmark: Bookmark) => void
-  totalNotifications: number
+  bookmarks: Bookmark[]
+  onEditBookmark: (id: string, patch: BookmarkPatch) => void
   existingUrls?: string[]
 }
 
@@ -22,7 +24,8 @@ export function Header({
   searchQuery,
   onSearchChange,
   onAddBookmark,
-  totalNotifications,
+  bookmarks,
+  onEditBookmark,
   existingUrls = [],
 }: HeaderProps) {
   const { t } = useLanguage()
@@ -51,14 +54,7 @@ export function Header({
 
       {/* 우측 액션 */}
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
-        <Button variant="ghost" size="icon" className="relative w-9 h-9 md:w-10 md:h-10">
-          <Bell className="w-4 h-4 md:w-5 md:h-5" />
-          {totalNotifications > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 bg-primary text-primary-foreground text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center">
-              {totalNotifications > 99 ? "99+" : totalNotifications}
-            </span>
-          )}
-        </Button>
+        <NotificationMenu bookmarks={bookmarks} onEdit={onEditBookmark} />
 
         <div className="hidden sm:block">
           <AddBookmarkDialog onAdd={onAddBookmark} existingUrls={existingUrls} />
