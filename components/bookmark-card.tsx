@@ -19,7 +19,7 @@ import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
 import { useLanguage, translateCategory } from "@/lib/i18n"
 import type { Bookmark } from "@/lib/types"
 import type { BookmarkPatch } from "@/lib/bookmarks"
-import { needsKoreanTranslation, translateToKorean } from "@/lib/translate-client"
+import { needsTranslation, translateDescription } from "@/lib/translate-client"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -73,16 +73,21 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
   const [imageFailed, setImageFailed] = useState(false)
   const showImage = !!bookmark.image && !imageFailed
 
-  // 한국어 화면에서 설명이 외국어면 한글 번역을 보여준다. 번역은 한 번만 받아 북마크에 저장해 둔다.
-  const translationReady = !!bookmark.descriptionKo && bookmark.descriptionKoSource === bookmark.description
-  const description = lang === "ko" && translationReady ? bookmark.descriptionKo : bookmark.description
+  // 설명이 화면 언어(한국어·일본어·영어)로 되어 있지 않으면 그 언어로 번역해 보여준다.
+  // 번역은 언어마다 한 번만 받아 북마크에 저장해 둔다.
+  const saved = bookmark.translations?.[lang]
+  const translationReady = !!saved && saved.source === bookmark.description
+  const description = translationReady ? saved.text : bookmark.description
   const onEditRef = useRef(onEdit)
   useEffect(() => { onEditRef.current = onEdit }, [onEdit])
+  const translationsRef = useRef(bookmark.translations)
+  useEffect(() => { translationsRef.current = bookmark.translations }, [bookmark.translations])
   useEffect(() => {
-    if (lang !== "ko" || translationReady || !needsKoreanTranslation(bookmark.description)) return
+    if (translationReady || !needsTranslation(bookmark.description, lang)) return
     const source = bookmark.description
-    translateToKorean(source).then(ko => {
-      if (ko) onEditRef.current(bookmark.id, { descriptionKo: ko, descriptionKoSource: source })
+    translateDescription(source, lang).then(text => {
+      if (!text) return
+      onEditRef.current(bookmark.id, { translations: { ...translationsRef.current, [lang]: { text, source } } })
     })
   }, [lang, translationReady, bookmark.id, bookmark.description])
   const faviconUrl = faviconUrls[faviconIndex] ?? null

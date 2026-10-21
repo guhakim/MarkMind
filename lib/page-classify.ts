@@ -4,13 +4,19 @@
 export const CATEGORIES = ["AI", "디자인", "쇼핑", "기술", "뉴스", "엔터테인먼트", "교육", "비즈니스", "소셜", "금융", "기타"] as const
 export type Category = typeof CATEGORIES[number]
 
-const NAMED_ENTITIES: Record<string, string> = { lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }
+// 페이지 제목·설명에 자주 나오는 이름 엔티티 (없는 이름은 그대로 둔다)
+const NAMED_ENTITIES: Record<string, string> = {
+  lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  middot: "·", bull: "•", hellip: "…", mdash: "—", ndash: "–",
+  lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”", laquo: "«", raquo: "»",
+  copy: "©", reg: "®", trade: "™", deg: "°", times: "×", euro: "€",
+}
 
 export function decodeEntities(s: string): string {
   return s
     .replace(/&#(\d+);/g, (m, d: string) => safeFromCodePoint(Number(d)) ?? m)
     .replace(/&#x([0-9a-f]+);/gi, (m, h: string) => safeFromCodePoint(parseInt(h, 16)) ?? m)
-    .replace(/&(lt|gt|quot|apos|nbsp);/g, (_, name: string) => NAMED_ENTITIES[name])
+    .replace(/&([a-z]+);/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m)
     // &amp;는 마지막에 풀어야 "&amp;lt;" 같은 이중 인코딩이 한 번만 풀린다
     .replace(/&amp;/g, "&")
 }

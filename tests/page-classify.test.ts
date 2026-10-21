@@ -90,6 +90,10 @@ describe("extractFromHtml", () => {
 describe("decodeEntities", () => {
   it("이중 인코딩은 한 번만 푼다", () => assert.equal(decodeEntities("&amp;lt;"), "&lt;"))
   it("잘못된 코드포인트는 그대로 둔다", () => assert.equal(decodeEntities("&#99999999;"), "&#99999999;"))
+  it("&middot; 같은 자주 쓰는 이름 엔티티를 푼다", () => {
+    assert.equal(decodeEntities("Assets &middot; Kenney &mdash; Free &hellip;"), "Assets · Kenney — Free …")
+  })
+  it("모르는 이름 엔티티는 그대로 둔다", () => assert.equal(decodeEntities("&unknownthing;"), "&unknownthing;"))
 })
 
 describe("decodeHtml", () => {
