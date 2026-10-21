@@ -6,8 +6,10 @@ import { auth } from "@/lib/firebase"
 import { useFirebaseAuth } from "@/components/firebase-auth-provider"
 import { ContactDialog } from "@/components/contact-dialog"
 import { LogOut, User, MessageSquare } from "lucide-react"
+import { toast } from "sonner"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -19,7 +21,7 @@ import { useLanguage } from "@/lib/i18n"
 
 export function UserMenu() {
   const { t } = useLanguage()
-  const { user, loading } = useFirebaseAuth()
+  const { user, loading, autoLogout, setAutoLogout } = useFirebaseAuth()
   const [contactOpen, setContactOpen] = useState(false)
 
   if (loading) {
@@ -63,6 +65,17 @@ export function UserMenu() {
             <MessageSquare className="w-4 h-4 mr-2" />
             {t("common.inquiry")}
           </DropdownMenuItem>
+          <DropdownMenuCheckboxItem
+            className="cursor-pointer"
+            checked={autoLogout}
+            onCheckedChange={(on) => {
+              setAutoLogout(on)
+                .then(() => toast.success(t(on ? "toast.autoLogoutOn" : "toast.autoLogoutOff")))
+                .catch(() => toast.error(t("toast.settingFailed")))
+            }}
+          >
+            {t("menu.autoLogout")}
+          </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-destructive focus:text-destructive cursor-pointer"

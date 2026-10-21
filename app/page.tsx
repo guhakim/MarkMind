@@ -8,8 +8,9 @@ import { CategorySidebar, CATEGORIES } from "@/components/category-sidebar"
 import { BookmarkCard } from "@/components/bookmark-card"
 import { Header } from "@/components/header"
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
+import { ImportBookmarksDialog } from "@/components/import-bookmarks-dialog"
 import { Button } from "@/components/ui/button"
-import { Plus, Sparkles, RefreshCw, Link } from "lucide-react"
+import { Plus, Sparkles, RefreshCw, Link, Upload } from "lucide-react"
 import { type Bookmark } from "@/lib/types"
 import { subscribeToBookmarks, addBookmark, deleteBookmark, updateBookmark, applyCheckResult, type BookmarkPatch } from "@/lib/bookmarks"
 import { auth } from "@/lib/firebase"
@@ -341,18 +342,30 @@ function BookmarkApp({ uid }: { uid: string }) {
               </p>
             </div>
             {bookmarks.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReanalyzeAll}
-                disabled={reanalyzing}
-                className="shrink-0 gap-1.5 text-xs"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
-                {reanalyzing
-                  ? t("dashboard.reanalyzing", { done: reanalyzProgress.done, total: reanalyzProgress.total })
-                  : t("dashboard.reanalyzeAll")}
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <ImportBookmarksDialog
+                  uid={uid}
+                  existingUrls={bookmarks.map(b => b.url)}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" title={t("import.trigger")}>
+                      <Upload className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{t("import.trigger")}</span>
+                    </Button>
+                  }
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReanalyzeAll}
+                  disabled={reanalyzing}
+                  className="shrink-0 gap-1.5 text-xs"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
+                  {reanalyzing
+                    ? t("dashboard.reanalyzing", { done: reanalyzProgress.done, total: reanalyzProgress.total })
+                    : t("dashboard.reanalyzeAll")}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -379,7 +392,12 @@ function BookmarkApp({ uid }: { uid: string }) {
                   : t("dashboard.noBookmarksDesc")
                 }
               </p>
-              {!searchQuery && <AddBookmarkDialog onAdd={handleAddBookmark} />}
+              {!searchQuery && (
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <AddBookmarkDialog onAdd={handleAddBookmark} />
+                  <ImportBookmarksDialog uid={uid} existingUrls={bookmarks.map(b => b.url)} />
+                </div>
+              )}
             </div>
           )}
 

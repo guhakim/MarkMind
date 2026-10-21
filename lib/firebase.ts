@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app"
-import { getAuth, GoogleAuthProvider, browserSessionPersistence, setPersistence } from "firebase/auth"
+import { getAuth, GoogleAuthProvider, browserLocalPersistence, browserSessionPersistence, setPersistence } from "firebase/auth"
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -32,5 +32,28 @@ export const db = (() => {
   }
 })()
 
-// 세션 persistence: 탭/브라우저 닫으면 로그아웃, 자동 로그인 없음
-setPersistence(auth, browserSessionPersistence).catch(() => {})
+// 보안 자동 로그아웃(3분 비활동 + 탭 닫으면 로그아웃)은 사용자가 켜는 선택 기능이다.
+// 기본은 로그인 유지 — 북마크 앱은 하루에 여러 번 잠깐씩 여는데 매번 다시 로그인하게 하면 쓰지 않게 된다.
+// 기기별 설정이라 localStorage에 둔다 (읽기 실패 시 기본값).
+const AUTO_LOGOUT_KEY = "markmind-auto-logout"
+
+export function getAutoLogoutPref(): boolean {
+  try {
+    return typeof window !== "undefined" && localStorage.getItem(AUTO_LOGOUT_KEY) === "on"
+  } catch {
+    return false
+  }
+}
+
+// 켜면 세션 persistence(탭 닫으면 로그아웃), 끄면 로컬 persistence(로그인 유지).
+// setPersistence는 이미 로그인한 사용자도 새 저장소로 옮겨 준다.
+export async function setAutoLogoutPref(on: boolean): Promise<void> {
+  try {
+    localStorage.setItem(AUTO_LOGOUT_KEY, on ? "on" : "off")
+  } catch { /* 저장 불가 — 이번 세션에만 적용 */ }
+  await setPersistence(auth, on ? browserSessionPersistence : browserLocalPersistence)
+}
+
+if (typeof window !== "undefined") {
+  setPersistence(auth, getAutoLogoutPref() ? browserSessionPersistence : browserLocalPersistence).catch(() => {})
+}
