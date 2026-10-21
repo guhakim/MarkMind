@@ -61,6 +61,25 @@ export function extractFromHtml(html: string) {
 }
 
 /**
+ * AI 요약에 넘길 본문 텍스트. 스크립트·스타일·내비게이션 등 화면에 보이지 않거나 반복되는 부분을 빼고
+ * 태그를 걷어낸 뒤 공백을 정리한다. 본문이 길면 앞부분만 쓴다.
+ */
+export function extractMainText(html: string, maxChars = 3000): string {
+  const body = /<body\b[^>]*>([\s\S]*)<\/body>/i.exec(html)?.[1] ?? html
+  const text = body
+    .replace(/<(script|style|noscript|svg|template|iframe|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+  return decodeEntities(text)
+    .replace(/[ \t\f\v\u00a0]+/g, " ")
+    .replace(/\s*\n\s*/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim()
+    .slice(0, maxChars)
+}
+
+/**
  * 대표 이미지 주소를 페이지 주소 기준 절대 URL로 만든다.
  * https만 허용한다 — 앱이 https로 서비스되므로 http 이미지는 혼합 콘텐츠로 막히고,
  * data:/javascript: 같은 값은 카드에 넣지 않는다. 너무 긴 주소도 버린다.

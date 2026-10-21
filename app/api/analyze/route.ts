@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireUid } from "@/lib/auth-server"
 import { assertPublicHttpUrl, fetchPublicUrl, UnsafeUrlError } from "@/lib/url-guard"
-import { buildTags, decodeHtml, extractFromHtml, guessCategory, resolveImageUrl, type Category } from "@/lib/page-classify"
+import { buildTags, decodeHtml, extractFromHtml, extractMainText, guessCategory, resolveImageUrl, type Category } from "@/lib/page-classify"
+import { aiConfigured, analyzeWithClaude } from "@/lib/ai-analyze"
+import { takeAiQuota } from "@/lib/ai-quota"
 
 // dns/crypto 등 Node API를 쓰므로 Edge가 아닌 Node 런타임을 명시
 export const runtime = "nodejs"
+// 페이지 가져오기(최대 7초) + AI 분석(최대 15초, 재시도 1회)을 담을 여유
+export const maxDuration = 45
 
 // 도메인별 확정 매핑 (이미 알려진 사이트)
 const DOMAIN_MAP: Record<string, { title: string; category: Category; tags: string[]; description: string }> = {
@@ -138,6 +142,20 @@ export async function POST(req: NextRequest) {
 
     // 태그 생성
     const tags = buildTags(title, description, category, keywords)
+
+    // 3단계(선택): Claude 요약·분류. 키가 없거나, 오늘 상한을 넘었거나, 실패하면 위 규칙 결과를 그대로 쓴다.
+    if (aiConfigured && page.html && await takeAiQuota(auth.uid)) {
+      const ai = await analyzeWithClaude({
+        url: page.finalUrl,
+        title: ogTitle || title,
+        description: ogDesc,
+        headings: h1,
+        text: extractMainText(page.html),
+      })
+      if (ai) {
+        return NextResponse.json({ title, description: ai.summary, category: ai.category, tags: ai.tags, image, ai: true })
+      }
+    }
 
     return NextResponse.json({ title, description, category, tags, image })
   } catch (e) {

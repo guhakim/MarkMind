@@ -16,15 +16,15 @@ MarkMind는 URL 하나만 넣으면 페이지 내용을 읽어 자동으로 분�
 
 ## 주요 기능
 
-### 자동 분석 & 분류 (규칙 기반)
-- URL을 입력하면 해당 페이지를 크롤링하여 **제목, 설명, 카테고리, 태그**를 자동 생성
+### 자동 분석 & 분류 (규칙 기반 + 선택형 AI)
+- URL을 입력하면 해당 페이지를 크롤링하여 **제목, 설명, 카테고리, 태그, 썸네일**을 자동 생성
 - OG 메타태그, 제목, 헤딩을 파싱해 정보를 추출
 - 은행·AI·디자인 등 자주 쓰는 도메인은 20여 개의 **확정 매핑 테이블**로 즉시 처리
 - 매핑에 없는 도메인은 제목·설명 텍스트에 대한 **키워드 정규식**으로 카테고리와 태그를 추론
-
-> 분류 로직은 전부 `app/api/analyze/route.ts` 안의 도메인 매핑 테이블 + 키워드 정규식입니다.
-> **LLM(모델) 호출은 코드 어디에도 없습니다.** 앱 UI에 보이는 "AI" 표현은 제품 네이밍이며,
-> 실제 구현은 서버 측 규칙 기반 분류입니다.
+- **AI 요약(선택)**: `ANTHROPIC_API_KEY`를 설정하면 매핑에 없는 페이지는 Claude가 본문을 읽고
+  2~3문장 요약 + 카테고리 + 태그를 정합니다 (`lib/ai-analyze.ts`). 키가 없거나, 사용자별 하루 상한
+  (`AI_DAILY_LIMIT`, 기본 100회)을 넘었거나, 호출이 실패하면 규칙 기반 결과를 그대로 씁니다.
+  - 기본 모델 `claude-opus-5-5` (북마크 1개당 약 $0.01~0.02), `ANTHROPIC_MODEL=claude-haiku-5-5`로 바꾸면 약 $0.0005
 
 ### 카테고리 자동 분류 (11개)
 `AI` · `디자인` · `쇼핑` · `기술` · `뉴스` · `엔터테인먼트` · `교육` · `비즈니스` · `소셜` · `금융` · `기타`
@@ -75,7 +75,7 @@ MarkMind는 URL 하나만 넣으면 페이지 내용을 읽어 자동으로 분�
 | 데이터베이스 | Firebase Firestore (유저별 서브컬렉션) |
 | 서버 기능 | Next.js API Routes (Edge/Node.js) |
 | 푸시 알림 | Web Push API + VAPID + `web-push` 라이브러리 |
-| URL 분석/분류 | HTML 크롤링 + 규칙 기반 분류 (도메인 매핑 + 키워드 정규식, LLM 호출 없음) |
+| URL 분석/분류 | HTML 크롤링 + 규칙 기반 분류 (도메인 매핑 + 키워드 정규식) + 선택형 Claude 요약·분류 |
 | 배포 | [Vercel](https://vercel.com) |
 | 스케줄러 | Vercel Cron (`0 0 * * *` — 매일 자정) |
 | 린트 | ESLint 9 flat config + `eslint-config-next` (`npm run lint`) |
@@ -202,6 +202,9 @@ Vercel Cron이 매일 자정 호출하는 서버 측 일괄 체크 엔드포인�
 | `VAPID_PRIVATE_KEY` | Web Push VAPID 비밀 키 |
 | `CRON_SECRET` | Cron 엔드포인트 보호용 시크릿 |
 | `NEXT_PUBLIC_WEB3FORMS_KEY` | 문의 폼 web3forms access key (공개 키, 미설정 시 코드 내 기본값 사용) |
+| `ANTHROPIC_API_KEY` | (선택) AI 요약·분류용 Claude API 키. 비우면 규칙 기반만 사용 |
+| `ANTHROPIC_MODEL` | (선택) 사용할 모델, 기본 `claude-opus-5-5` |
+| `AI_DAILY_LIMIT` | (선택) 사용자별 하루 AI 분석 횟수, 기본 100 |
 
 ---
 
