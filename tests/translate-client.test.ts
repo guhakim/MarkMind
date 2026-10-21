@@ -46,3 +46,11 @@ describe("needsTranslation — 공통", () => {
     }
   })
 })
+
+describe("translateWithGemini", () => {
+  it("GEMINI_API_KEY가 없으면 호출하지 않고 unavailable", async () => {
+    const { geminiConfigured, translateWithGemini } = await import("../lib/gemini-translate.ts")
+    if (geminiConfigured) return
+    assert.deepEqual(await translateWithGemini("hello", "ko"), { error: "unavailable" })
+  })
+})

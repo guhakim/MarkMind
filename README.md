@@ -47,6 +47,11 @@ MarkMind는 URL 하나만 넣으면 페이지 내용을 읽어 자동으로 분�
 - 공유 시점의 스냅샷(최대 200개, 제목·주소·설명·카테고리·태그·썸네일만). "최신으로 업데이트"로 같은 링크 갱신, "공유 중지"로 삭제
 - `shares` 컬렉션은 서버(Admin SDK, `/api/share`)만 읽고 쓰며 `firestore.rules`상 클라이언트는 접근할 수 없음
 
+### 설명 번역 (화면 언어별)
+- 언어 버튼이 KR/JP/EN일 때 설명이 그 언어가 아니면 번역해서 표시 (언어마다 한 번만 번역해 북마크에 저장)
+- `GEMINI_API_KEY`가 있으면 Gemini 무료 등급, 없으면 `ANTHROPIC_API_KEY`(Claude)로 번역. 둘 다 없으면 원문 표시
+- 무료 등급 분당 한도에 맞춰 브라우저가 한 번에 1건, 약 6.5초 간격으로 요청 (`lib/translate-client.ts`)
+
 ### 알림함
 - 헤더 벨 → 변경이 감지된 북마크 목록(최근 변경 순). 열어 보면 읽음 처리, "모두 읽음"
 
@@ -213,7 +218,9 @@ Vercel Cron이 매일 자정 호출하는 서버 측 일괄 체크 엔드포인�
 | `NEXT_PUBLIC_WEB3FORMS_KEY` | 문의 폼 web3forms access key (공개 키, 미설정 시 코드 내 기본값 사용) |
 | `ANTHROPIC_API_KEY` | (선택) AI 요약·분류용 Claude API 키. 비우면 규칙 기반만 사용 |
 | `ANTHROPIC_MODEL` | (선택) 사용할 모델, 기본 `claude-opus-5-5` |
-| `AI_DAILY_LIMIT` | (선택) 사용자별 하루 AI 분석 횟수, 기본 100 |
+| `AI_DAILY_LIMIT` | (선택) 사용자별 하루 AI 분석·번역 횟수, 기본 100 |
+| `GEMINI_API_KEY` | (선택) 설명 번역을 Gemini 무료 등급으로. 있으면 Claude 대신 사용 |
+| `GEMINI_MODEL` | (선택) 번역 모델, 기본 `gemini-flash-lite-latest` |
 
 ---
 
