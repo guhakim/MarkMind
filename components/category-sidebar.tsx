@@ -14,6 +14,7 @@ import {
   Bot,
   Palette,
   MessageSquare,
+  Landmark,
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -34,6 +35,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   MoreHorizontal,
   Bot,
   Palette,
+  Landmark,
 }
 
 const CATEGORIES = [
@@ -47,6 +49,7 @@ const CATEGORIES = [
   { id: "교육", name: "교육", icon: "GraduationCap" },
   { id: "비즈니스", name: "비즈니스", icon: "Briefcase" },
   { id: "소셜", name: "소셜", icon: "Users" },
+  { id: "금융", name: "금융", icon: "Landmark" },
   { id: "기타", name: "기타", icon: "MoreHorizontal" },
 ]
 

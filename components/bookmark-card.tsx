@@ -18,11 +18,12 @@ import {
 import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
 import { useLanguage, translateCategory } from "@/lib/i18n"
 import type { Bookmark } from "@/lib/types"
+import type { BookmarkPatch } from "@/lib/bookmarks"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
   onDelete: (id: string) => void
-  onEdit: (bookmark: Bookmark) => void
+  onEdit: (id: string, patch: BookmarkPatch) => void
 }
 
 function isSafeUrl(url: string): boolean {
@@ -76,10 +77,10 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
   const handleBellToggle = () => {
     if (hasNotification) {
       // 알림 있음 → 읽음 처리 (구독 유지)
-      onEdit({ ...bookmark, notifications: 0 })
+      onEdit(bookmark.id, { notifications: 0 })
     } else {
       // 구독 토글 (on ↔ off)
-      onEdit({ ...bookmark, notifyEnabled: !isSubscribed, notifications: 0 })
+      onEdit(bookmark.id, { notifyEnabled: !isSubscribed, notifications: 0 })
     }
   }
 
@@ -174,7 +175,7 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
                     rel="noopener noreferrer"
                     onClick={() => {
                       if (bookmark.notifyEnabled && bookmark.notifications > 0) {
-                        onEdit({ ...bookmark, notifications: 0, lastVisited: new Date() })
+                        onEdit(bookmark.id, { notifications: 0, lastVisited: new Date() })
                       }
                     }}
                   >
@@ -207,7 +208,7 @@ export function BookmarkCard({ bookmark, onDelete, onEdit }: BookmarkCardProps) 
           bookmark={bookmark}
           open={editOpen}
           onOpenChange={setEditOpen}
-          onSave={onEdit}
+          onSave={(patch) => onEdit(bookmark.id, patch)}
         />
 
         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
