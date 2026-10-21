@@ -70,10 +70,12 @@ export async function deleteBookmark(uid: string, id: string): Promise<void> {
   await deleteDoc(doc(col(uid), id))
 }
 
-export async function updateBookmark(uid: string, bookmark: Bookmark): Promise<void> {
-  const { id, ...data } = bookmark
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await updateDoc(doc(col(uid), id), data as any)
+// 바뀐 필드만 갱신한다. 문서 전체를 되쓰면 그사이 서버 크론이 올린
+// notifications / contentHash / lastChecked가 화면에 있던 옛 값으로 덮인다.
+export type BookmarkPatch = Partial<Omit<Bookmark, "id" | "createdAt">>
+
+export async function updateBookmark(uid: string, id: string, patch: BookmarkPatch): Promise<void> {
+  await updateDoc(doc(col(uid), id), patch)
 }
 
 // 콘텐츠 변경 감지 결과만 부분 갱신한다.

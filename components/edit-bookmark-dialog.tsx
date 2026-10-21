@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { useLanguage, translateCategory } from "@/lib/i18n"
 import type { Bookmark } from "@/lib/types"
+import type { BookmarkPatch } from "@/lib/bookmarks"
 
 const CATEGORIES = ["AI", "디자인", "쇼핑", "기술", "뉴스", "엔터테인먼트", "교육", "비즈니스", "소셜", "금융", "기타"]
 const CUSTOM_KEY = "__custom__"
@@ -30,7 +31,7 @@ interface EditBookmarkDialogProps {
   bookmark: Bookmark
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (bookmark: Bookmark) => void
+  onSave: (patch: BookmarkPatch) => void
 }
 
 export function EditBookmarkDialog({ bookmark, open, onOpenChange, onSave }: EditBookmarkDialogProps) {
@@ -49,7 +50,7 @@ export function EditBookmarkDialog({ bookmark, open, onOpenChange, onSave }: Edi
 
   const handleSave = () => {
     const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean)
-    onSave({ ...bookmark, title, description, category, tags })
+    onSave({ title, description, category, tags })
     onOpenChange(false)
   }
 

@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireUid } from "@/lib/auth-server"
 import { assertPublicHttpUrl, fetchPublicUrl, UnsafeUrlError } from "@/lib/url-guard"
+import { buildTags, decodeHtml, extractFromHtml, guessCategory, type Category } from "@/lib/page-classify"
 
 // dns/crypto 등 Node API를 쓰므로 Edge가 아닌 Node 런타임을 명시
 export const runtime = "nodejs"
-
-const CATEGORIES = ["AI", "디자인", "쇼핑", "기술", "뉴스", "엔터테인먼트", "교육", "비즈니스", "소셜", "금융", "기타"] as const
-type Category = typeof CATEGORIES[number]
 
 // 도메인별 확정 매핑 (이미 알려진 사이트)
 const DOMAIN_MAP: Record<string, { title: string; category: Category; tags: string[]; description: string }> = {
@@ -49,93 +47,12 @@ async function fetchPage(url: string): Promise<string> {
         "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
       },
     })
-    return await res.text()
+    return decodeHtml(await res.arrayBuffer(), res.headers.get("content-type"))
   } catch {
     return ""
   } finally {
     clearTimeout(timer)
   }
-}
-
-function extractFromHtml(html: string) {
-  const get = (re: RegExp) =>
-    re.exec(html)?.[1]?.trim()
-      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-      .replace(/\s+/g, " ").slice(0, 300) || ""
-
-  const title =
-    get(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']{2,})/i) ||
-    get(/<meta[^>]+content=["']([^"']{2,})["'][^>]+property=["']og:title["']/i) ||
-    get(/<title[^>]*>([^<]{2,150})<\/title>/i)
-
-  const description =
-    get(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{10,})/i) ||
-    get(/<meta[^>]+content=["']([^"']{10,})["'][^>]+property=["']og:description["']/i) ||
-    get(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{10,})/i) ||
-    get(/<meta[^>]+content=["']([^"']{10,})["'][^>]+name=["']description["']/i)
-
-  const siteName =
-    get(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']{1,})/i) ||
-    get(/<meta[^>]+content=["']([^"']{1,})["'][^>]+property=["']og:site_name["']/i)
-
-  // h1 태그에서 주요 텍스트 추출
-  const h1 = get(/<h1[^>]*>([^<]{2,100})<\/h1>/i)
-
-  // keywords 메타태그
-  const keywords = get(/<meta[^>]+name=["']keywords["'][^>]+content=["']([^"']{2,})/i)
-
-  return { title, description, siteName, h1, keywords }
-}
-
-function guessCategory(text: string): Category {
-  const t = text.toLowerCase()
-  if (/\bai\b|gpt|llm|claude|gemini|copilot|neural|인공지능|딥러닝|머신러닝|chatbot|챗봇/.test(t)) return "AI"
-  if (/bank|뱅크|은행|finance|금융|invest|증권|insurance|보험|카드|fund|펀드|loan|대출|저축|적금/.test(t)) return "금융"
-  if (/shop|쇼핑|mall|store|mart|구매|할인|배송|이커머스|e-commerce/.test(t)) return "쇼핑"
-  if (/design|디자인|figma|ux|ui|creative|포트폴리오|그래픽|prototype/.test(t)) return "디자인"
-  if (/news|뉴스|media|언론|신문|방송|press|기사/.test(t)) return "뉴스"
-  if (/netflix|stream|영화|드라마|웹툰|animation|게임|game|entertainment|엔터/.test(t)) return "엔터테인먼트"
-  if (/learn|교육|course|강의|study|university|대학|school|tutorial|학습/.test(t)) return "교육"
-  if (/social|sns|twitter|facebook|instagram|community|커뮤니티|forum/.test(t)) return "소셜"
-  if (/business|비즈니스|startup|스타트업|saas|crm|b2b|기업|company/.test(t)) return "비즈니스"
-  if (/github|개발|developer|coding|tech|software|api|framework|programming/.test(t)) return "기술"
-  return "기타"
-}
-
-function buildTags(title: string, description: string, category: Category, keywords: string): string[] {
-  const tags: string[] = []
-  const text = (title + " " + description + " " + keywords).toLowerCase()
-
-  const categoryDefaults: Record<Category, string[]> = {
-    "AI": ["AI"],
-    "금융": ["금융"],
-    "쇼핑": ["쇼핑"],
-    "디자인": ["디자인"],
-    "뉴스": ["뉴스"],
-    "엔터테인먼트": ["엔터테인먼트"],
-    "교육": ["교육"],
-    "소셜": ["SNS"],
-    "비즈니스": ["비즈니스"],
-    "기술": ["개발"],
-    "기타": [],
-  }
-  tags.push(...(categoryDefaults[category] || []))
-
-  if (/gpt|chatgpt/.test(text)) tags.push("ChatGPT")
-  if (/챗봇|chatbot/.test(text)) tags.push("챗봇")
-  if (/이미지|image/.test(text)) tags.push("이미지생성")
-  if (/은행|bank/.test(text)) tags.push("은행")
-  if (/송금|transfer/.test(text)) tags.push("송금")
-  if (/투자|invest/.test(text)) tags.push("투자")
-  if (/ui|ux/.test(text)) tags.push("UI/UX")
-  if (/협업|collaborate/.test(text)) tags.push("협업")
-  if (/오픈소스|open source/.test(text)) tags.push("오픈소스")
-  if (/스트리밍|streaming/.test(text)) tags.push("스트리밍")
-  if (/모바일|mobile/.test(text)) tags.push("모바일")
-  if (/무료|free/.test(text)) tags.push("무료")
-
-  return [...new Set(tags)].slice(0, 4)
 }
 
 function extractBaseDomain(hostname: string): string {

@@ -11,7 +11,7 @@ import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Sparkles, RefreshCw, Link } from "lucide-react"
 import { type Bookmark } from "@/lib/types"
-import { subscribeToBookmarks, addBookmark, deleteBookmark, updateBookmark, applyCheckResult } from "@/lib/bookmarks"
+import { subscribeToBookmarks, addBookmark, deleteBookmark, updateBookmark, applyCheckResult, type BookmarkPatch } from "@/lib/bookmarks"
 import { auth } from "@/lib/firebase"
 import { cn } from "@/lib/utils"
 import { useLanguage, translateCategory } from "@/lib/i18n"
@@ -125,7 +125,7 @@ function BookmarkApp({ uid }: { uid: string }) {
     setDropping(true)
     await handleDropAdd(url)
     setDropping(false)
-  }, [handleDropAdd])
+  }, [handleDropAdd, t])
 
   useEffect(() => {
     return subscribeToBookmarks(uid, setBookmarks, () => {
@@ -133,13 +133,19 @@ function BookmarkApp({ uid }: { uid: string }) {
     })
   }, [uid, t])
 
+  // 체크 루프는 최신 목록을 읽되, 체크 결과로 lastChecked가 바뀔 때마다 재시작하지는 않도록 ref로 넘긴다
+  const bookmarksRef = useRef(bookmarks)
+  useEffect(() => { bookmarksRef.current = bookmarks }, [bookmarks])
+  // 벨이 켜진 북마크 집합 — 새로 벨을 켜면 새로고침 없이 바로 체크 대상이 된다
+  const bellKey = bookmarks.filter(b => b.notifyEnabled).map(b => b.id).join(",")
+
   // 앱 로드 시 벨 켜진 북마크 콘텐츠 변경 감지 (6시간마다 1회)
   useEffect(() => {
-    if (bookmarks.length === 0) return
+    if (!bellKey) return
     const SIX_HOURS = 6 * 60 * 60 * 1000
 
     // notifyEnabled인 북마크만 체크, 마지막 체크로부터 6시간 이상 경과한 것만
-    const bellBookmarks = bookmarks.filter(b => {
+    const bellBookmarks = bookmarksRef.current.filter(b => {
       if (!b.notifyEnabled) return false
       const last = b.lastChecked ? new Date(b.lastChecked).getTime() : 0
       return Date.now() - last > SIX_HOURS
@@ -181,7 +187,7 @@ function BookmarkApp({ uid }: { uid: string }) {
     }
     checkAll()
     return () => { cancelled = true }
-  }, [bookmarks.length, uid])
+  }, [bellKey, uid])
 
   const handleReanalyzeAll = async () => {
     if (reanalyzing || bookmarks.length === 0) return
@@ -204,8 +210,7 @@ function BookmarkApp({ uid }: { uid: string }) {
         })
         if (res.ok) {
           const data = await res.json()
-          await updateBookmark(uid, {
-            ...bm,
+          await updateBookmark(uid, bm.id, {
             title: data.title || bm.title,
             description: data.description || bm.description,
             category: data.category || bm.category,
@@ -255,8 +260,8 @@ function BookmarkApp({ uid }: { uid: string }) {
     })
   }
 
-  const handleEditBookmark = (bookmark: Bookmark) => {
-    updateBookmark(uid, bookmark).catch(() => {
+  const handleEditBookmark = (id: string, patch: BookmarkPatch) => {
+    updateBookmark(uid, id, patch).catch(() => {
       toast.error(t("toast.editFailed"))
     })
   }
