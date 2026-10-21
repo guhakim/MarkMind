@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireUid } from "@/lib/auth-server"
 import { assertPublicHttpUrl, fetchPublicUrl, UnsafeUrlError } from "@/lib/url-guard"
-import { buildTags, decodeHtml, extractFromHtml, guessCategory, type Category } from "@/lib/page-classify"
+import { buildTags, decodeHtml, extractFromHtml, extractMainText, guessCategory, resolveImageUrl, type Category } from "@/lib/page-classify"
+import { aiConfigured, analyzeWithClaude } from "@/lib/ai-analyze"
+import { takeAiQuota } from "@/lib/ai-quota"
 
 // dns/crypto 등 Node API를 쓰므로 Edge가 아닌 Node 런타임을 명시
 export const runtime = "nodejs"
+// 페이지 가져오기(최대 7초) + AI 분석(최대 15초, 재시도 1회)을 담을 여유
+export const maxDuration = 45
 
 // 도메인별 확정 매핑 (이미 알려진 사이트)
 const DOMAIN_MAP: Record<string, { title: string; category: Category; tags: string[]; description: string }> = {
@@ -33,7 +37,8 @@ const DOMAIN_MAP: Record<string, { title: string; category: Category; tags: stri
   "linkedin.com":     { title: "LinkedIn",     category: "비즈니스", tags: ["커리어","네트워킹","취업"], description: "LinkedIn은 전문가 네트워킹 플랫폼으로, 구직·채용·업계 뉴스·비즈니스 인맥 관리에 활용됩니다." },
 }
 
-async function fetchPage(url: string): Promise<string> {
+// 최종 주소(리다이렉트 후)도 돌려준다 — 상대 경로 이미지를 그 주소 기준으로 풀어야 한다
+async function fetchPage(url: string): Promise<{ html: string; finalUrl: string }> {
   const controller = new AbortController()
   // 타임아웃은 리다이렉트 hop 전체에 걸리는 총 예산이다
   const timer = setTimeout(() => controller.abort(), 7000)
@@ -47,9 +52,9 @@ async function fetchPage(url: string): Promise<string> {
         "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
       },
     })
-    return decodeHtml(await res.arrayBuffer(), res.headers.get("content-type"))
+    return { html: decodeHtml(await res.arrayBuffer(), res.headers.get("content-type")), finalUrl: res.url || url }
   } catch {
-    return ""
+    return { html: "", finalUrl: url }
   } finally {
     clearTimeout(timer)
   }
@@ -96,12 +101,25 @@ export async function POST(req: NextRequest) {
     // 1단계: 확정 매핑 확인
     const domainMatch = DOMAIN_MAP[hostname] || DOMAIN_MAP[baseDomain]
     if (domainMatch) {
-      return NextResponse.json(domainMatch)
+      // 사이트 첫 화면이면 매핑만으로 끝낸다. 유튜브 영상처럼 특정 페이지면 페이지를 읽어
+      // 그 페이지의 제목·설명·썸네일을 쓰고, 분류·태그는 매핑을 그대로 쓴다.
+      if (parsed.pathname === "/" && !parsed.search) {
+        return NextResponse.json({ ...domainMatch, image: null })
+      }
+      const page = await fetchPage(parsed.href)
+      const found = extractFromHtml(page.html)
+      return NextResponse.json({
+        ...domainMatch,
+        title: found.title || domainMatch.title,
+        description: found.description ? found.description.slice(0, 200) : domainMatch.description,
+        image: resolveImageUrl(found.image, page.finalUrl),
+      })
     }
 
     // 2단계: 실제 페이지 크롤링
-    const html = await fetchPage(parsed.href)
-    const { title: ogTitle, description: ogDesc, siteName, h1, keywords } = extractFromHtml(html)
+    const page = await fetchPage(parsed.href)
+    const { title: ogTitle, description: ogDesc, siteName, h1, keywords, image: rawImage } = extractFromHtml(page.html)
+    const image = resolveImageUrl(rawImage, page.finalUrl)
 
     // 제목 결정
     const baseName = baseDomain.split(".")[0]
@@ -125,7 +143,21 @@ export async function POST(req: NextRequest) {
     // 태그 생성
     const tags = buildTags(title, description, category, keywords)
 
-    return NextResponse.json({ title, description, category, tags })
+    // 3단계(선택): Claude 요약·분류. 키가 없거나, 오늘 상한을 넘었거나, 실패하면 위 규칙 결과를 그대로 쓴다.
+    if (aiConfigured && page.html && await takeAiQuota(auth.uid)) {
+      const ai = await analyzeWithClaude({
+        url: page.finalUrl,
+        title: ogTitle || title,
+        description: ogDesc,
+        headings: h1,
+        text: extractMainText(page.html),
+      })
+      if (ai) {
+        return NextResponse.json({ title, description: ai.summary, category: ai.category, tags: ai.tags, image, ai: true })
+      }
+    }
+
+    return NextResponse.json({ title, description, category, tags, image })
   } catch (e) {
     console.error(e)
     return NextResponse.json({ error: "분석 중 오류가 발생했습니다." }, { status: 500 })

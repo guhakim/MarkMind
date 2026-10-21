@@ -8,16 +8,26 @@ import { normalizeBookmarkUrl } from "@/lib/bookmark-import"
 
 const col = (uid: string) => collection(db, "users", uid, "bookmarks")
 
+// Firestore Timestamp는 반드시 toDate()로 바꿔야 한다. new Date(Timestamp)는
+// Timestamp.valueOf()가 비교용 문자열을 돌려주는 탓에 Invalid Date가 된다.
+function toDateOrNull(value: unknown): Date | null {
+  if (value instanceof Timestamp) return value.toDate()
+  if (value instanceof Date) return value
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
 function fromFirestore(id: string, data: Record<string, unknown>): Bookmark {
   return {
-    ...(data as Omit<Bookmark, "id" | "createdAt" | "lastVisited">),
+    ...(data as Omit<Bookmark, "id" | "createdAt" | "lastVisited" | "lastChecked" | "lastChangedAt">),
     id,
-    createdAt: data.createdAt instanceof Timestamp
-      ? data.createdAt.toDate()
-      : new Date(data.createdAt as string ?? Date.now()),
-    lastVisited: data.lastVisited instanceof Timestamp
-      ? data.lastVisited.toDate()
-      : data.lastVisited ? new Date(data.lastVisited as string) : null,
+    createdAt: toDateOrNull(data.createdAt) ?? new Date(),
+    lastVisited: toDateOrNull(data.lastVisited),
+    lastChecked: toDateOrNull(data.lastChecked),
+    lastChangedAt: toDateOrNull(data.lastChangedAt),
   }
 }
 
@@ -100,6 +110,6 @@ export async function applyCheckResult(
   await updateDoc(doc(col(uid), id), {
     ...(contentHash ? { contentHash } : {}),
     lastChecked: new Date(),
-    ...(changed ? { notifications: increment(1) } : {}),
+    ...(changed ? { notifications: increment(1), lastChangedAt: new Date() } : {}),
   })
 }

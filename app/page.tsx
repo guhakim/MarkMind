@@ -9,6 +9,7 @@ import { BookmarkCard } from "@/components/bookmark-card"
 import { Header } from "@/components/header"
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { ImportBookmarksDialog } from "@/components/import-bookmarks-dialog"
+import { ShareCollectionDialog } from "@/components/share-collection-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Sparkles, RefreshCw, Link, Upload } from "lucide-react"
 import { type Bookmark } from "@/lib/types"
@@ -86,6 +87,7 @@ function BookmarkApp({ uid }: { uid: string }) {
         category: data.category || "기타",
         tags: data.tags || [],
         favicon: null,
+        image: data.image ?? null,
         notifications: 0,
         createdAt: new Date(),
         lastVisited: null,
@@ -216,6 +218,7 @@ function BookmarkApp({ uid }: { uid: string }) {
             description: data.description || bm.description,
             category: data.category || bm.category,
             tags: data.tags?.length ? data.tags : bm.tags,
+            image: data.image ?? bm.image ?? null,
           })
         }
       } catch {
@@ -243,11 +246,6 @@ function BookmarkApp({ uid }: { uid: string }) {
       return true
     })
   }, [bookmarks, activeCategory, searchQuery])
-
-  const totalNotifications = useMemo(
-    () => bookmarks.reduce((sum, b) => sum + b.notifications, 0),
-    [bookmarks]
-  )
 
   const handleAddBookmark = (bookmark: Bookmark) => {
     addBookmark(uid, bookmark).catch(() => {
@@ -306,7 +304,8 @@ function BookmarkApp({ uid }: { uid: string }) {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onAddBookmark={handleAddBookmark}
-          totalNotifications={totalNotifications}
+          bookmarks={bookmarks}
+          onEditBookmark={handleEditBookmark}
           existingUrls={bookmarks.map(b => b.url)}
         />
 
@@ -343,6 +342,10 @@ function BookmarkApp({ uid }: { uid: string }) {
             </div>
             {bookmarks.length > 0 && (
               <div className="flex items-center gap-2 shrink-0">
+                <ShareCollectionDialog
+                  category={activeCategory}
+                  count={activeCategory === "all" ? bookmarks.length : bookmarks.filter(b => b.category === activeCategory).length}
+                />
                 <ImportBookmarksDialog
                   uid={uid}
                   existingUrls={bookmarks.map(b => b.url)}

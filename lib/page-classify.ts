@@ -54,8 +54,47 @@ export function extractFromHtml(html: string) {
   // h1 태그에서 주요 텍스트 추출
   const h1 = first(/<h1[^>]*>([^<]{2,100})<\/h1>/i)
   const keywords = meta("keywords", 2)
+  // 카드 썸네일용 대표 이미지 (상대 경로일 수 있어 resolveImageUrl로 마무리한다)
+  const image = meta("og:image:secure_url", 4) || meta("og:image", 4) || meta("twitter:image", 4) || meta("twitter:image:src", 4)
 
-  return { title, description, siteName, h1, keywords }
+  return { title, description, siteName, h1, keywords, image }
+}
+
+/**
+ * AI 요약에 넘길 본문 텍스트. 스크립트·스타일·내비게이션 등 화면에 보이지 않거나 반복되는 부분을 빼고
+ * 태그를 걷어낸 뒤 공백을 정리한다. 본문이 길면 앞부분만 쓴다.
+ */
+export function extractMainText(html: string, maxChars = 3000): string {
+  const body = /<body\b[^>]*>([\s\S]*)<\/body>/i.exec(html)?.[1] ?? html
+  const text = body
+    .replace(/<(script|style|noscript|svg|template|iframe|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+  return decodeEntities(text)
+    .replace(/[ \t\f\v\u00a0]+/g, " ")
+    .replace(/\s*\n\s*/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim()
+    .slice(0, maxChars)
+}
+
+/**
+ * 대표 이미지 주소를 페이지 주소 기준 절대 URL로 만든다.
+ * https만 허용한다 — 앱이 https로 서비스되므로 http 이미지는 혼합 콘텐츠로 막히고,
+ * data:/javascript: 같은 값은 카드에 넣지 않는다. 너무 긴 주소도 버린다.
+ */
+export function resolveImageUrl(raw: string, pageUrl: string): string | null {
+  if (!raw) return null
+  try {
+    const u = new URL(raw, pageUrl)
+    if (u.protocol === "http:") u.protocol = "https:"
+    if (u.protocol !== "https:") return null
+    const href = u.href
+    return href.length <= 1000 ? href : null
+  } catch {
+    return null
+  }
 }
 
 // 짧은 영어 단어는 \b로 감싼다 — 그렇지 않으면 guide/build의 "ui", small의 "mall",

@@ -28,6 +28,7 @@ interface AnalysisResult {
   description: string
   category: string
   tags: string[]
+  image?: string | null
 }
 
 export function AddBookmarkDialog({ onAdd, trigger, existingUrls = [] }: AddBookmarkDialogProps) {
@@ -99,6 +100,7 @@ export function AddBookmarkDialog({ onAdd, trigger, existingUrls = [] }: AddBook
       category: analyzed.category,
       tags: analyzed.tags,
       favicon: null,
+      image: analyzed.image ?? null,
       notifications: 0,
       createdAt: new Date(),
       lastVisited: null,

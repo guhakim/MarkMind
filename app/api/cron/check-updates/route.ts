@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
         await task.bmRef.update({
           contentHash: newHash,
           lastChecked: new Date(),
-          ...(changed ? { notifications: FieldValue.increment(1) } : {}),
+          ...(changed ? { notifications: FieldValue.increment(1), lastChangedAt: new Date() } : {}),
         })
 
         if (changed) {

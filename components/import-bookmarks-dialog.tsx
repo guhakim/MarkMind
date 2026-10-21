@@ -45,6 +45,7 @@ function toBookmark(item: ImportedBookmark, data: AnalyzeResult): Bookmark {
     category: data.category || "기타",
     tags,
     favicon: null,
+    image: data.image ?? null,
     notifications: 0,
     // 원래 저장한 날짜를 유지해 목록 순서가 브라우저와 같게 한다
     createdAt: item.addedAt ?? new Date(),

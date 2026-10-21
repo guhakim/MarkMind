@@ -1,6 +1,6 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
-import { buildTags, decodeEntities, decodeHtml, extractFromHtml, guessCategory } from "../lib/page-classify.ts"
+import { buildTags, decodeEntities, decodeHtml, extractFromHtml, guessCategory, resolveImageUrl } from "../lib/page-classify.ts"
 
 describe("guessCategory — 다른 단어 속 짧은 키워드에 걸리지 않는다", () => {
   const cases: [string, string][] = [
@@ -118,5 +118,34 @@ describe("decodeHtml", () => {
 
   it("알 수 없는 charset이면 UTF-8로 대체한다", () => {
     assert.equal(decodeHtml(new TextEncoder().encode("한글"), "text/html; charset=bogus"), "한글")
+  })
+})
+
+describe("대표 이미지 (썸네일)", () => {
+  it("og:image를 읽고, 없으면 twitter:image로 대체한다", () => {
+    assert.equal(extractFromHtml(`<meta property="og:image" content="https://cdn.example.com/a.jpg">`).image, "https://cdn.example.com/a.jpg")
+    assert.equal(extractFromHtml(`<meta name="twitter:image" content="https://cdn.example.com/t.png">`).image, "https://cdn.example.com/t.png")
+    assert.equal(extractFromHtml("<title>no image</title>").image, "")
+  })
+
+  it("og:image:secure_url을 og:image보다 우선한다", () => {
+    const html = `<meta property="og:image" content="http://x.com/a.jpg"><meta property="og:image:secure_url" content="https://x.com/a.jpg">`
+    assert.equal(extractFromHtml(html).image, "https://x.com/a.jpg")
+  })
+
+  it("상대 경로는 페이지 주소 기준으로 푼다", () => {
+    assert.equal(resolveImageUrl("/img/og.png", "https://blog.example.com/post/1"), "https://blog.example.com/img/og.png")
+    assert.equal(resolveImageUrl("//cdn.example.com/a.png", "https://example.com/"), "https://cdn.example.com/a.png")
+  })
+
+  it("http는 https로 올리고, data:/javascript:는 버린다", () => {
+    assert.equal(resolveImageUrl("http://example.com/a.png", "https://example.com/"), "https://example.com/a.png")
+    assert.equal(resolveImageUrl("data:image/png;base64,AAAA", "https://example.com/"), null)
+    assert.equal(resolveImageUrl("javascript:alert(1)", "https://example.com/"), null)
+    assert.equal(resolveImageUrl("", "https://example.com/"), null)
+  })
+
+  it("너무 긴 주소는 버린다", () => {
+    assert.equal(resolveImageUrl("https://example.com/" + "a".repeat(2000), "https://example.com/"), null)
   })
 })
