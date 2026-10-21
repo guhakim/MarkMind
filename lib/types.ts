@@ -3,8 +3,8 @@ export interface Bookmark {
   url: string
   title: string
   description: string
-  descriptionKo?: string       // 한국어 화면용 번역 (description이 외국어일 때)
-  descriptionKoSource?: string // 번역할 때의 원문 — description이 바뀌면 번역을 다시 한다
+  // 화면 언어별 설명 번역. source는 번역할 때의 원문 — description이 바뀌면 다시 번역한다
+  translations?: Partial<Record<"ko" | "ja" | "en", { text: string; source: string }>>
   category: string
   tags: string[]
   favicon: string | null
