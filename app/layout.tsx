@@ -51,6 +51,15 @@ export default async function RootLayout({
 
   return (
     <html lang="ko" className={`${geist.variable} ${geistMono.variable}`}>
+      <head>
+        {/* 애드센스 사이트 소유권 확인은 서버가 보낸 HTML에서 이 태그를 찾으므로 next/script가 아니라 일반 script로 넣는다.
+            호스트를 proxy.ts의 script-src에 허용해 두었으므로 nonce는 필요 없다. */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3217274047131813"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange nonce={nonce}>
           <LanguageProvider>

@@ -37,15 +37,16 @@ function buildContentSecurityPolicy(nonce: string) {
     // 'unsafe-inline' 대신 nonce. 'unsafe-eval'은 개발 모드 전용 —
     // next dev의 HMR·소스맵과 React의 서버 스택 복원이 eval을 쓴다.
     // https://apis.google.com은 Firebase Auth가 gapi 스크립트를 동적으로 넣기 때문에 남긴다.
-    `script-src 'self' 'nonce-${nonce}'${isProduction ? "" : " 'unsafe-eval'"} https://apis.google.com`,
+    // 나머지 호스트는 Google 애드센스 스크립트(app/layout.tsx)와 그 스크립트가 불러오는 광고·트래픽 품질 스크립트.
+    `script-src 'self' 'nonce-${nonce}'${isProduction ? "" : " 'unsafe-eval'"} https://apis.google.com https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://partner.googleadservices.com https://www.googletagservices.com https://adservice.google.com https://*.adtrafficquality.google`,
     // style-src의 'unsafe-inline'은 의도적으로 남긴다. React가 style={{...}}를
     // inline style 속성으로 렌더하고 Radix UI / vaul / sonner도 위치 계산을 style 속성으로
     // 넣는데, style 속성은 style-src-attr가 지배하므로 nonce로는 허용할 수 없다.
     // nonce만 넣으면 레이아웃이 깨진다. 제거하려면 inline style을 전부 클래스로 옮겨야 한다.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://*.googleapis.com wss://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://vitals.vercel-insights.com https://api.web3forms.com",
-    "frame-src https://markmind-18437.firebaseapp.com https://accounts.google.com",
+    "connect-src 'self' https://*.googleapis.com wss://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://vitals.vercel-insights.com https://api.web3forms.com https://pagead2.googlesyndication.com https://*.adtrafficquality.google",
+    "frame-src https://markmind-18437.firebaseapp.com https://accounts.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://*.adtrafficquality.google",
     "font-src 'self' data: https://fonts.gstatic.com",
     "object-src 'none'",
     "base-uri 'self'",
