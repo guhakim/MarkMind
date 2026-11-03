@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageToggle } from "@/components/language-toggle"
 import { ContactForm } from "@/components/contact-form"
+import { AdFitBanner } from "@/components/adfit-banner"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -237,6 +238,10 @@ export function LandingPage() {
           <ContactForm variant="page" />
         </div>
       </section>
+
+      <div className="px-6 pb-16">
+        <AdFitBanner />
+      </div>
 
       <footer className="border-t border-border px-6 py-6 text-center">
         <p className="text-xs text-muted-foreground">{t("footer.copyright")}</p>
