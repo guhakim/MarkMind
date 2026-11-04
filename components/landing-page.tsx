@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageToggle } from "@/components/language-toggle"
 import { ContactForm } from "@/components/contact-form"
+import { LandingAds } from "@/components/ad-unit"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -237,6 +238,8 @@ export function LandingPage() {
           <ContactForm variant="page" />
         </div>
       </section>
+
+      <LandingAds />
 
       <footer className="border-t border-border px-6 py-6 text-center">
         <p className="text-xs text-muted-foreground">{t("footer.copyright")}</p>
