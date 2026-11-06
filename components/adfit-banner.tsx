@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useRef, useState } from "react"
 
-// 랜딩 페이지의 Kakao AdFit 광고 6칸: 화면 양옆 세로 광고 2개(160x600) + 문의 폼 아래 4개(300x250).
+// 랜딩 페이지의 Kakao AdFit 광고 6칸: 화면 양옆 세로 광고 2개(160x600) + 문의 폼 아래 4개(300x250, 2x2).
 // 광고단위는 AdFit 대시보드의 매체 "markmind"에 등록되어 있다.
 const SIDE_UNITS = {
   left: "DAN-5qzxChJqBok0tLZ1",
@@ -64,7 +64,8 @@ export const AdFitAds = memo(function AdFitAds() {
           </div>
         </>
       )}
-      <div className="max-w-[1296px] mx-auto flex flex-wrap justify-center gap-8">
+      {/* 하단은 본문 폭(768px) 안에서 2x2로 둔다. 더 넓게 펼치면 고정된 양옆 광고와 겹친다. */}
+      <div className="max-w-[632px] mx-auto flex flex-wrap justify-center gap-8">
         {BOTTOM_UNITS.map((unit) => (
           <AdFitIns key={unit} unit={unit} width={300} height={250} />
         ))}
