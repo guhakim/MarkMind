@@ -10,6 +10,7 @@ import { useLanguage } from "@/lib/i18n"
 import { LanguageToggle } from "@/components/language-toggle"
 import { ContactForm } from "@/components/contact-form"
 import { LandingAds } from "@/components/ad-unit"
+import { AdFitAds } from "@/components/adfit-banner"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -240,6 +241,7 @@ export function LandingPage() {
       </section>
 
       <LandingAds />
+      <AdFitAds />
 
       <footer className="border-t border-border px-6 py-6 text-center">
         <p className="text-xs text-muted-foreground">{t("footer.copyright")}</p>
