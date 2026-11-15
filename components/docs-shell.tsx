@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
+import { AdFitBottomRow } from "@/components/adfit-banner"
 
 // 사용 가이드 · 블로그 · 자주 묻는 질문 페이지가 함께 쓰는 틀.
 // 로그인 없이 읽는 정적 페이지라 서버 컴포넌트로 두고, 검색엔진이 본문을 바로 읽을 수 있게 한다.
@@ -69,6 +70,8 @@ export function DocsShell({ current, children }: { current?: DocNavKey; children
       </header>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-5 sm:px-6 py-12 md:py-16">{children}</main>
+
+      <AdFitBottomRow />
 
       <DocsFooter />
     </div>
