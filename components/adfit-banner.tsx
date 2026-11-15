@@ -73,3 +73,28 @@ export const AdFitAds = memo(function AdFitAds() {
     </div>
   )
 })
+
+// 사용 가이드 · 블로그 · 자주 묻는 질문 페이지 맨 아래 광고 줄: 300x250 4개를 가운데 정렬로 나란히.
+// 넓은 화면에선 한 줄에 4개, 좁아지면 2개씩, 휴대폰에선 세로로 쌓인다.
+// 광고가 오지 않은 ins는 AdFit이 display:none으로 두므로 자리를 차지하지 않고, 채워진 광고끼리 모인다.
+export const AdFitBottomRow = memo(function AdFitBottomRow() {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const script = document.createElement("script")
+    script.src = "https://t1.kakaocdn.net/kas/static/ba.min.js"
+    script.async = true
+    ref.current?.appendChild(script)
+    return () => script.remove()
+  }, [])
+
+  return (
+    <div ref={ref} aria-label="광고" className="px-4 sm:px-6 pb-12">
+      <div className="max-w-[1260px] mx-auto flex flex-wrap justify-center items-start gap-5">
+        {BOTTOM_UNITS.map((unit) => (
+          <AdFitIns key={unit} unit={unit} width={300} height={250} />
+        ))}
+      </div>
+    </div>
+  )
+})
