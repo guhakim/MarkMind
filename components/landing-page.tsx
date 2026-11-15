@@ -11,6 +11,7 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { ContactForm } from "@/components/contact-form"
 import { LandingAds } from "@/components/ad-unit"
 import { AdFitAds } from "@/components/adfit-banner"
+import { DocsNav } from "@/components/docs-shell"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -113,6 +114,7 @@ export function LandingPage() {
           </div>
           <span className="font-bold text-lg text-foreground">MarkMind</span>
         </div>
+        <DocsNav className="hidden md:flex" />
         <div className="flex items-center gap-2">
           <LanguageToggle />
           <button
@@ -124,6 +126,8 @@ export function LandingPage() {
           </button>
         </div>
       </header>
+      {/* 휴대폰에서는 헤더 아래 한 줄로 */}
+      <DocsNav className="md:hidden flex justify-center px-4 py-2 border-b border-border/50" />
 
       <section className="flex flex-col items-center justify-center text-center px-6 pt-16 pb-12 md:pt-24 md:pb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-6">
@@ -229,7 +233,7 @@ export function LandingPage() {
       </section>
 
       {/* 문의하기 섹션 */}
-      <section className="px-6 pb-16">
+      <section id="contact" className="px-6 pb-16 scroll-mt-6">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Mail className="w-5 h-5 text-primary" />
@@ -244,6 +248,7 @@ export function LandingPage() {
       <AdFitAds />
 
       <footer className="border-t border-border px-6 py-6 text-center">
+        <DocsNav className="flex justify-center mb-3" size="sm" />
         <p className="text-xs text-muted-foreground">{t("footer.copyright")}</p>
       </footer>
     </div>
