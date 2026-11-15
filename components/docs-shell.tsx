@@ -33,14 +33,18 @@ export function DocsNav({ className = "", size = "md" }: { className?: string; s
 export function DocsShell({ current, children }: { current?: DocNavKey; children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background flex flex-col">
-      <header className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 border-b border-border/50">
+      {/* 휴대폰에서는 로고·시작하기가 첫 줄, 메뉴가 둘째 줄 */}
+      <header className="px-4 sm:px-6 py-3 md:py-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border/50">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <span className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30">
             <Sparkles className="w-4 h-4 text-primary-foreground" />
           </span>
           <span className="font-bold text-lg text-foreground">MarkMind</span>
         </Link>
-        <nav aria-label="안내 메뉴" className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+        <nav
+          aria-label="안내 메뉴"
+          className="order-last md:order-none w-full md:w-auto flex items-center justify-center md:ml-auto gap-1 sm:gap-2"
+        >
           {DOC_NAV.map((item) => (
             <Link
               key={item.key}
@@ -55,13 +59,13 @@ export function DocsShell({ current, children }: { current?: DocNavKey; children
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/"
-            className="whitespace-nowrap h-9 px-4 ml-1 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors inline-flex items-center"
-          >
-            시작하기
-          </Link>
         </nav>
+        <Link
+          href="/"
+          className="whitespace-nowrap h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors inline-flex items-center"
+        >
+          시작하기
+        </Link>
       </header>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-5 sm:px-6 py-12 md:py-16">{children}</main>
