@@ -134,3 +134,24 @@
     display: none;
   }
 }
+
+/* 사용 가이드 · 블로그 · 자주 묻는 질문 본문 */
+@layer components {
+  .doc { @apply text-[15px] leading-7 text-foreground/90 break-keep; }
+  .doc h1 { @apply text-3xl md:text-4xl font-bold text-foreground leading-tight mb-4; }
+  .doc .lead { @apply text-base text-muted-foreground mb-10; }
+  .doc h2 { @apply text-xl md:text-2xl font-bold text-foreground mt-12 mb-4 pt-6 border-t border-border/60; }
+  .doc h3 { @apply text-base font-semibold text-foreground mt-6 mb-2; }
+  .doc p { @apply mb-4; }
+  .doc ul, .doc ol { @apply mb-4 pl-5 space-y-1.5; }
+  .doc ul { @apply list-disc; }
+  .doc ol { @apply list-decimal; }
+  .doc a { @apply text-primary underline underline-offset-4; }
+  .doc strong { @apply text-foreground font-semibold; }
+  .doc .tip { @apply rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 mb-6 text-sm; }
+  .doc .kicker { @apply inline-block text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mb-4; }
+  .doc details { @apply rounded-xl border border-border px-4 py-3 mb-3; }
+  .doc details[open] { @apply bg-muted/40; }
+  .doc summary { @apply cursor-pointer font-semibold text-foreground; }
+  .doc details p { @apply mt-3 mb-0; }
+}
